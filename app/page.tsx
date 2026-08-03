@@ -42,8 +42,8 @@ export default function Home() {
           <a className="transition hover:text-white" href="#contact">Contact</a>
         </nav>
         <div className="flex items-center gap-3">
-          <a href="#login" className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:border-violet-400/70 hover:bg-white/10">Login</a>
-          <a href="#get-started" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-7 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(124,58,237,0.35)] transition hover:brightness-110">Get Started</a>
+          <a href="/login" className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:border-violet-400/70 hover:bg-white/10">Login</a>
+          <a href="/signup" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-7 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(124,58,237,0.35)] transition hover:brightness-110">Get Started</a>
         </div>
       </header>
 
