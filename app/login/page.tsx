@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase";
+import { getSupabaseClient } from "../lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +13,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     async function checkSession() {
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         router.replace("/login/app/dashboard");
@@ -26,6 +28,13 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setMessage("Supabase client not available.");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,

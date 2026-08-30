@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { getSupabaseClient } from "../lib/supabase";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +13,13 @@ export default function SignupPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setMessage("Supabase client not available.");
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email,

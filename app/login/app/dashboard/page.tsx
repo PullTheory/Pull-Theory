@@ -2,7 +2,7 @@
 
 import { DragEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../../lib/supabase";
+import { getSupabaseClient } from "../../../lib/supabase";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -98,6 +98,13 @@ export default function DashboardPage() {
   async function handleLogout() {
     setLoading(true);
     setStatus("");
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setStatus("Supabase client not available.");
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signOut();
 

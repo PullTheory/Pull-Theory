@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase";
+import { getSupabaseClient } from "../lib/supabase";
 
 type CardResult = {
   id: string;
@@ -121,6 +121,11 @@ export default function SearchPage() {
 
   useEffect(() => {
     async function checkSession() {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        setLoggedIn(false);
+        return;
+      }
       const { data } = await supabase.auth.getSession();
       setLoggedIn(Boolean(data.session));
     }
@@ -210,6 +215,12 @@ export default function SearchPage() {
     setCollectionSuccess("");
 
     try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        setCollectionError("Supabase client not available.");
+        return;
+      }
+
       const response = await fetch("/api/collection", {
         method: "POST",
         headers: {
