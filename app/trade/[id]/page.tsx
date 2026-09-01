@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSupabaseClient } from '../../lib/supabase';
 
 type Trade = any;
 
@@ -24,10 +25,20 @@ export default function TradeDetailPage({ params }: { params: { id: string } }) 
     if (!email) return;
     setLoading(true);
     try {
+      const supabase = getSupabaseClient();
+      let token: string | null = null;
+      if (supabase) {
+        const { data } = await supabase.auth.getSession();
+        token = data?.session?.access_token || null;
+      }
+
+      const headers: Record<string,string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(`/api/trades/${id}/accept`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        headers,
+        body: JSON.stringify({}),
       });
       const body = await res.json();
       if (res.ok) {

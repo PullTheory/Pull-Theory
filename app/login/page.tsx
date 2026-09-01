@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "../lib/supabase";
+import { recordTrafficEvent } from "../components/TrafficTracker";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
       if (!supabase) return;
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        router.replace("/login/app/dashboard");
+        router.replace("/marketplace/browse");
       }
     }
 
@@ -47,7 +48,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/login/app/dashboard");
+    void recordTrafficEvent("login_completed");
+    router.push("/marketplace/browse");
   }
 
   return (

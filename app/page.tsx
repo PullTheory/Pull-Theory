@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import { PublicLanding } from "./marketplace/browse/page";
+import MarketplaceShowcase from "./components/MarketplaceShowcase";
+import MembershipCheckoutButton from "./components/MembershipCheckoutButton";
+import AuthStatus from "./components/AuthStatus";
+import type { PaidPlan } from "./lib/stripePlans";
 
 const features = [
   ["Collection Tracking", "Catalog every card in one organized collection.", "cards"],
@@ -18,9 +23,59 @@ const values = [
   "Community first.",
 ];
 
+const pricingPlans = [
+  {
+    name: "Collector",
+    planId: null,
+    price: "$0",
+    detail: "Free forever",
+    includedTrades: "0 included",
+    additionalAuthentication: "$9.99 each",
+    features: ["Track up to 250 cards", "Portfolio value", "Browse the marketplace"],
+    href: "/signup",
+    action: "Start collecting",
+  },
+  {
+    name: "Trader",
+    planId: "trader",
+    price: "$14.99",
+    detail: "per month",
+    includedTrades: "2 per month",
+    additionalAuthentication: "$7.99 each",
+    features: ["PullMatch access", "Reduced authentication fees", "Discounted platform fees"],
+    href: "/signup?plan=trader",
+    action: "Become a Trader",
+  },
+  {
+    name: "Pro",
+    planId: "pro",
+    price: "$24.99",
+    detail: "per month",
+    includedTrades: "5 per month",
+    additionalAuthentication: "$5.99 each",
+    features: ["Everything in Trader", "Enhanced TheoryScore", "Advanced portfolio analytics"],
+    href: "/signup?plan=pro",
+    action: "Go Pro",
+    featured: true,
+  },
+  {
+    name: "Elite",
+    planId: "elite",
+    price: "$39.99",
+    detail: "per month",
+    includedTrades: "10 per month",
+    additionalAuthentication: "$4.99 each",
+    features: ["Everything in Pro", "Priority PullShield handling", "Elite collector support"],
+    href: "/signup?plan=elite",
+    action: "Choose Elite",
+  },
+];
+
 export default function Home() {
+  return <PublicLanding />;
+
   return (
-    <main className="min-h-screen overflow-hidden bg-[#050506] text-white selection:bg-violet-500 selection:text-white">
+    <main className="min-h-screen overflow-hidden bg-[#050506]/70 text-white selection:bg-violet-500 selection:text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.28),_transparent_62%)]" />
         <div className="absolute top-16 left-10 h-80 w-80 rounded-full bg-fuchsia-500/12 blur-[140px]" />
@@ -36,18 +91,16 @@ export default function Home() {
         </a>
         <nav className="hidden items-center gap-8 text-sm uppercase tracking-[0.24em] text-zinc-300 md:flex" aria-label="Primary navigation">
           <a className="transition hover:text-white" href="#features">Features</a>
-          <a className="transition hover:text-white" href="#pricing">Pricing</a>
+          <a className="transition hover:text-white" href="/pricing">Pricing</a>
           <a className="transition hover:text-white" href="#about">About</a>
           <a className="transition hover:text-white" href="#blog">Blog</a>
           <a className="transition hover:text-white" href="#contact">Contact</a>
         </nav>
-        <div className="flex items-center gap-3">
-          <a href="/login" className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:border-violet-400/70 hover:bg-white/10">Login</a>
-          <a href="/signup" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-7 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(124,58,237,0.35)] transition hover:brightness-110">Get Started</a>
-        </div>
+        <AuthStatus variant="home" />
       </header>
 
       <section className="relative mx-auto flex w-full max-w-7xl flex-col items-center overflow-hidden px-6 pb-28 pt-16 text-center sm:pt-20 lg:px-8 lg:pb-44">
+        <img src="/logo.png" alt="" aria-hidden="true" className="pointer-events-none absolute left-1/2 top-8 h-[34rem] w-[34rem] max-w-none -translate-x-1/2 opacity-[0.28] mix-blend-screen sm:h-[46rem] sm:w-[46rem]" />
         <div className="absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.24),transparent_62%)]" />
         <div className="absolute inset-x-0 top-16 -z-10 mx-auto h-[34rem] w-[92%] rounded-[3rem] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent_65%)] shadow-[0_0_120px_rgba(124,58,237,0.16)] blur-[90px]" />
         <div className="absolute left-1/2 top-24 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500/15 blur-3xl" />
@@ -66,10 +119,11 @@ export default function Home() {
         <h1 className="mt-10 max-w-5xl text-balance text-5xl font-semibold tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">The Home for <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">Serious</span> Collectors.</h1>
         <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-400 sm:text-lg">Track every card, understand your collection&apos;s value, and trade with confidence.</p>
         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-          <a href="#get-started" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-12 py-4 text-sm font-semibold text-white shadow-[0_20px_80px_rgba(124,58,237,0.35)] transition hover:brightness-110">Get Started <span aria-hidden="true" className="ml-2">→</span></a>
-          <a href="#features" className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/[0.06] px-12 py-4 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/[0.12]">Explore Features</a>
+          <a href="/signup" aria-label="Get started and create a free Pull Theory account" className="group inline-flex w-full items-center justify-center gap-4 rounded-2xl border border-violet-200/50 bg-gradient-to-r from-violet-500 via-violet-600 to-fuchsia-500 px-8 py-5 text-left text-white shadow-[0_18px_55px_rgba(124,58,237,0.55)] ring-2 ring-violet-300/25 transition hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_22px_70px_rgba(192,132,252,0.65)] focus:outline-none focus:ring-4 focus:ring-violet-300/60 sm:w-auto"><span><span className="block text-base font-bold">Get Started</span><span className="mt-0.5 block text-xs font-medium text-violet-100">Create your free collector account</span></span><span aria-hidden="true" className="text-2xl transition-transform group-hover:translate-x-1">→</span></a>
         </div>
       </section>
+
+      <MarketplaceShowcase />
 
       <section id="features" className="border-t border-white/[0.08] bg-[#08070f] py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -90,8 +144,18 @@ export default function Home() {
       </section>
 
       <section id="pricing" className="mx-auto max-w-7xl px-6 pb-24 lg:px-8">
-        <div className="rounded-3xl border border-violet-400/20 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.24),transparent_58%),rgba(255,255,255,0.025)] px-8 py-16 text-center shadow-[0_40px_120px_rgba(124,58,237,0.08)] sm:px-14 sm:py-20">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-300">Made for the long game</p><h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.045em] sm:text-5xl">Build a collection you&apos;re proud to own.</h2><a href="#get-started" className="mt-9 inline-block rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-black transition hover:bg-amber-200">Create your free account</a>
+        <div className="rounded-[2rem] border border-violet-400/20 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.24),transparent_58%),rgba(255,255,255,0.025)] px-6 py-16 shadow-[0_40px_120px_rgba(124,58,237,0.08)] sm:px-10 sm:py-20">
+          <div className="mx-auto max-w-2xl text-center"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-300">Memberships built for real traders</p><h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-5xl">Trade more. Pay less. Stay protected.</h2><p className="mt-5 text-zinc-400">Every paid membership includes PullShield authenticated trades, with lower pricing when you need more.</p></div>
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {pricingPlans.map((plan) => <article key={plan.name} className={`relative flex flex-col rounded-3xl border p-7 ${plan.featured ? "border-violet-300/50 bg-violet-500/[0.12] shadow-[0_24px_80px_rgba(124,58,237,0.22)]" : "border-white/10 bg-black/25"}`}>
+              {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-violet-500 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">Most popular</span>}
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">{plan.name}</p><p className="mt-6 text-4xl font-semibold tracking-tight text-white">{plan.price}</p><p className="mt-2 min-h-5 text-sm text-zinc-400">{plan.detail}</p>
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4"><p className="text-xs uppercase tracking-wider text-zinc-500">PullShield trades</p><p className="mt-1 text-lg font-semibold text-white">{plan.includedTrades}</p><p className="mt-3 text-xs uppercase tracking-wider text-zinc-500">Additional authentications</p><p className="mt-1 text-sm font-semibold text-violet-200">{plan.additionalAuthentication}</p></div>
+              <ul className="mt-6 space-y-3 text-sm text-zinc-200">{plan.features.map((feature) => <li key={feature} className="flex gap-3"><span className="text-emerald-300">✓</span>{feature}</li>)}</ul>
+              {plan.planId ? <MembershipCheckoutButton plan={plan.planId as PaidPlan} featured={plan.featured}>{plan.action}</MembershipCheckoutButton> : <a href={plan.href} className="mt-8 block rounded-2xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-violet-300/60 hover:bg-white/[0.06]">{plan.action}</a>}
+            </article>)}
+          </div>
+          <div className="mx-auto mt-10 max-w-4xl rounded-3xl border border-amber-300/20 bg-amber-300/[0.06] p-7"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-300">Trade cards, not cash</p><h3 className="mt-3 text-2xl font-semibold text-white">Pull Theory never charges for the value of your trade.</h3><p className="mt-3 max-w-3xl leading-7 text-zinc-300">A $150 Charizard for a $150 Blastoise is a true $0 card trade. Pull Theory does not buy or sell the cards, hold trade value, or take a percentage of the deal. Fees apply only when collectors choose optional PullShield authentication and protection.</p><div className="mt-6 grid gap-4 sm:grid-cols-4">{["Both collectors ship to Pull Theory", "We inspect authenticity and listing match", "We document condition and record the result", "Verified cards are sealed and forwarded"].map((step, index) => <div key={step} className="rounded-2xl bg-black/25 p-4 text-sm leading-6 text-zinc-300"><span className="mb-3 block text-amber-300">0{index + 1}</span>{step}</div>)}</div><div className="mt-6 grid gap-3 sm:grid-cols-3">{["Trader A covers PullShield", "Trader B covers PullShield", "Split PullShield 50 / 50"].map((option) => <div key={option} className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm font-medium text-zinc-200">{option}</div>)}</div><p className="mt-6 text-xs leading-5 text-zinc-400">If PullShield is included in a membership, that collector’s credit covers their portion. Outbound shipping and insurance are quoted separately and paid by the collectors. PullShield is optional for ordinary trades and recommended for higher-value cards.</p></div>
         </div>
       </section>
 
@@ -100,7 +164,7 @@ export default function Home() {
           <p className="text-zinc-400">© Pull Theory HQ</p>
           <div className="flex flex-wrap gap-6 text-zinc-400">
             <a className="transition hover:text-white" href="#privacy">Privacy</a>
-            <a className="transition hover:text-white" href="#terms">Terms</a>
+            <a className="transition hover:text-white" href="/terms">Terms</a>
             <a className="transition hover:text-white" href="#contact">Contact</a>
           </div>
         </div>

@@ -1,15 +1,32 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export async function POST(request: Request) {
-  const supabase = createServerClient(supabaseUrl, supabaseKey, { cookies: await cookies() });
-  const { data: sessionData } = await supabase.auth.getSession();
+async function getSupabaseServerClient() {
+  const cookieStore = await cookies();
+  return createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll: () => cookieStore.getAll(),
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {}
+      },
+    },
+  });
+}
 
-  if (!sessionData?.session?.user?.id) {
+export async function POST(request: Request) {
+  const supabase = await getSupabaseServerClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id;
+
+  if (!userId) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
@@ -21,16 +38,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "collectionId and binderId are required." }, { status: 400 });
   }
 
-  const { data, error } = await supabase.from("binder_cards").insert([
-    {
-      binder_id: binderId,
-      collection_id: collectionId,
-    },
+  const [{ data: binder }, { data: card }] = await Promise.all([
+    supabase.from("binders").select("id").eq("id", binderId).eq("user_id", userId).maybeSingle(),
+    supabase.from("collections").select("id").eq("id", collectionId).eq("user_id", userId).maybeSingle(),
   ]);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!binder || !card) {
+    return NextResponse.json({ error: "That card or binder is not available to your account." }, { status: 403 });
   }
 
-  return NextResponse.json({ success: true, item: data?.[0] ?? null });
+  const { data: existing } = await supabase
+    .from("binder_cards")
+    .select("binder_id")
+    .eq("binder_id", binderId)
+    .eq("collection_id", collectionId)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json({ success: true, message: "Card is already in this binder." });
+  }
+
+  const { data, error } = await supabase
+    .from("binder_cards")
+    .insert([{ binder_id: binderId, collection_id: collectionId }])
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true, item: data });
 }

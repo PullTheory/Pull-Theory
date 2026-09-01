@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { acceptTrade, getTrade } from '../../../../lib/tradesStore';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function POST(req: Request, { params }: RouteContext) {
+  const { id: idParam } = await params;
   try {
-    const id = Number(params.id);
+    const id = Number(idParam);
     if (Number.isNaN(id)) return NextResponse.json({ error: 'invalid id' }, { status: 400 });
     const body = await req.json();
-    const email = body?.email;
-    if (!email) return NextResponse.json({ error: 'email required' }, { status: 400 });
+    const authHeader = req.headers.get('authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const { getUserFromToken } = await import('../../../../lib/tradesStore');
+    const user = await getUserFromToken(token);
+    if (!user) return NextResponse.json({ error: 'authentication required' }, { status: 401 });
 
-    const trade = await acceptTrade(id, String(email));
+    const trade = await acceptTrade(id, String(user.email));
     if (!trade) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
     // if both parties have accepted, notify them with the authenticator address
@@ -30,10 +36,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 }
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function GET(_req: Request, { params }: RouteContext) {
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   if (Number.isNaN(id)) return NextResponse.json({ error: 'invalid id' }, { status: 400 });
   const trade = await getTrade(id);
   if (!trade) return NextResponse.json({ error: 'not found' }, { status: 404 });
-  return NextResponse.json(trade);
+  // A marketplace page is public. Keep the seller's email and return address
+  // private until a trade has been accepted and the protected workflow begins.
+  const { email: _email, shippingAddress: _shippingAddress, acceptedBy: _acceptedBy, authenticatorAddress: _authenticatorAddress, ...publicTrade } = trade;
+  return NextResponse.json(publicTrade);
 }

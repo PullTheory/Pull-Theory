@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { getCurrentAccessToken } from '../lib/supabase';
 
 export default function TradeForm() {
   const [loading, setLoading] = useState(false);
@@ -12,11 +13,18 @@ export default function TradeForm() {
     const data = Object.fromEntries(new FormData(form) as any);
     setLoading(true);
     setMessage(null);
-
     try {
+      const token = await getCurrentAccessToken();
+
+      if (!token) {
+        setMessage('You must be signed in to create a trade.');
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch('/api/trades', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
       const body = await res.json();

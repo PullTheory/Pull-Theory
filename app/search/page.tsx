@@ -101,7 +101,8 @@ const sampleCards: CardResult[] = [
 export default function SearchPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [cards, setCards] = useState<CardResult[]>(sampleCards);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cards, setCards] = useState<CardResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [addedIds, setAddedIds] = useState<string[]>([]);
@@ -109,6 +110,9 @@ export default function SearchPage() {
   const [collectionError, setCollectionError] = useState("");
   const [collectionSuccess, setCollectionSuccess] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [searchAttempt, setSearchAttempt] = useState(0);
+  const [wantedIds, setWantedIds] = useState<string[]>([]);
+  const [wantMessage, setWantMessage] = useState("");
 
   useEffect(() => {
     const timeout = collectionSuccess ? setTimeout(() => setCollectionSuccess(""), 4000) : undefined;
@@ -149,19 +153,37 @@ export default function SearchPage() {
   }, [addedIds]);
 
   useEffect(() => {
+    const hasSearchTerm = query.trim().length >= 2 || cardNumber.trim().length > 0;
+    if (!hasSearchTerm) {
+      setCards([]);
+      setError("");
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      void loadCards();
+    }, 300);
+
     async function loadCards() {
       setLoading(true);
       setError("");
 
       try {
-        const response = await fetch(`/api/pokemon/search?q=${encodeURIComponent(query)}`);
+        const response = await fetch(
+          `/api/pokemon/search?q=${encodeURIComponent(query)}&number=${encodeURIComponent(cardNumber)}`,
+          {
+          signal: controller.signal,
+          }
+        );
         const json = await response.json();
 
         if (!response.ok) {
           throw new Error(json.error || "Search failed");
         }
 
-        const results = (json.cards ?? sampleCards).map((item: any) => {
+        const results = (json.cards ?? []).map((item: any) => {
           const price =
             item.tcgplayer?.prices?.normal?.market ||
             item.tcgplayer?.prices?.holofoil?.market ||
@@ -188,17 +210,26 @@ export default function SearchPage() {
           };
         });
 
-        setCards(results);
+        if (!controller.signal.aborted) {
+          setCards(results);
+        }
       } catch (err) {
-        setError("Live search failed. Showing sample results.");
-        setCards(sampleCards);
+        if (controller.signal.aborted) {
+          return;
+        }
+        setError("Live card search is temporarily unavailable. Please try again.");
       }
 
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
 
-    loadCards();
-  }, [query]);
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [query, cardNumber, searchAttempt]);
 
   async function addToCollection(card: CardResult) {
     if (!loggedIn) {
@@ -220,12 +251,15 @@ export default function SearchPage() {
         setCollectionError("Supabase client not available.");
         return;
       }
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token || null;
+
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
 
       const response = await fetch("/api/collection", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(card),
       });
       const json = await response.json();
@@ -243,36 +277,87 @@ export default function SearchPage() {
     }
   }
 
+  async function addToWantList(card: CardResult) {
+    if (!loggedIn) { setCollectionError("Please log in to add cards to your Want List."); return; }
+    setWantMessage("");
+    try {
+      const supabase = getSupabaseClient(); const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      const response = await fetch("/api/wants", { method: "POST", headers: { "Content-Type": "application/json", ...(data.session?.access_token ? { Authorization: `Bearer ${data.session.access_token}` } : {}) }, body: JSON.stringify(card) });
+      const json = await response.json(); if (!response.ok) throw new Error(json.error ?? "Unable to add this card to your Want List.");
+      setWantedIds((current) => current.includes(card.id) ? current : [...current, card.id]); setWantMessage(json.alreadyAdded ? "This card is already in your Want List." : `${card.name} was added to your Want List.`);
+    } catch (error) { setWantMessage(error instanceof Error ? error.message : "Unable to add this card to your Want List."); }
+  }
+
   return (
-    <main className="min-h-screen bg-[#050506] px-6 py-12 text-white">
+    <main className="min-h-screen bg-[#050506]/70 px-6 py-12 text-white">
       <div className="mx-auto max-w-6xl space-y-10">
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_30px_90px_rgba(124,58,237,0.12)] backdrop-blur">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-amber-300">Card search</p>
-              <h1 className="mt-3 text-4xl font-semibold text-white">Find cards, sets, and market trends.</h1>
+              <p className="text-sm uppercase tracking-[0.3em] text-amber-300">My Collection</p>
+              <h1 className="mt-3 text-4xl font-semibold text-white">Pokémon Card Database</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                Search the card database by name, set, or rarity. Use the query below to explore current results.
+                Find the exact Pokémon card by name and card number, then add it straight to your collection.
               </p>
             </div>
-            <div className="w-full sm:w-[30rem]">
+            <div className="grid w-full gap-3 sm:w-[30rem] sm:grid-cols-[1fr_9rem]">
+              <div>
               <label htmlFor="search" className="mb-2 block text-sm text-zinc-300">
-                Search cards
+                Card name
               </label>
               <input
                 id="search"
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by name, set, or rarity"
+                placeholder="Example: Mimikyu ex"
                 className="w-full rounded-3xl border border-white/10 bg-black/40 px-5 py-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-violet-400"
               />
+              </div>
+              <div>
+                <label htmlFor="card-number" className="mb-2 block text-sm text-zinc-300">
+                  Card #
+                </label>
+                <input
+                  id="card-number"
+                  type="text"
+                  value={cardNumber}
+                  onChange={(event) => setCardNumber(event.target.value)}
+                  placeholder="e.g. 075"
+                  className="w-full rounded-3xl border border-white/10 bg-black/40 px-5 py-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-violet-400"
+                />
+              </div>
             </div>
           </div>
+          {query.trim().length === 1 && !cardNumber.trim() && (
+            <p className="mt-5 text-sm text-zinc-400">Keep typing—matches will appear after one more letter.</p>
+          )}
+          {query.trim().length >= 2 && !loading && cards.length > 0 && (
+            <div className="mt-6 rounded-3xl border border-violet-400/20 bg-black/25 p-4">
+              <p className="px-2 text-xs font-semibold uppercase tracking-[0.18em] text-violet-200">Matching cards</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {cards.slice(0, 6).map((card) => (
+                  <button
+                    key={`match-${card.id}`}
+                    type="button"
+                    onClick={() => {
+                      setQuery(card.name);
+                      setCardNumber(card.card_number);
+                    }}
+                    className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-left transition hover:border-violet-300/60 hover:bg-violet-500/10"
+                  >
+                    {card.image_url ? <img src={card.image_url} alt="" className="h-11 w-8 shrink-0 rounded object-cover" /> : <span className="grid h-11 w-8 shrink-0 place-items-center rounded bg-violet-500/20 text-violet-200">★</span>}
+                    <span className="min-w-0"><span className="block truncate text-sm font-semibold text-white">{card.name}</span><span className="mt-1 block truncate text-xs text-zinc-400">{card.set} · #{card.card_number}</span></span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {error && (
-            <p className="mt-6 rounded-3xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-              {error}
-            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+              <p>{error}</p>
+              <button type="button" onClick={() => setSearchAttempt((attempt) => attempt + 1)} className="rounded-xl border border-rose-200/40 px-3 py-1.5 font-semibold text-rose-50 transition hover:bg-rose-200/10">Retry search</button>
+            </div>
           )}
           {collectionError && (
             <p className="mt-6 rounded-3xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
@@ -284,6 +369,7 @@ export default function SearchPage() {
               {collectionSuccess}
             </p>
           )}
+          {wantMessage && <p className="mt-6 rounded-3xl border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm text-violet-100">{wantMessage}</p>}
           {!loggedIn && (
             <div className="mt-6 rounded-3xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm text-amber-100">
               <p className="mb-3">You must be logged in to save cards to your collection.</p>
@@ -323,7 +409,7 @@ export default function SearchPage() {
                   <p className="text-sm leading-6 text-zinc-400">Current market estimate: {card.price}</p>
                   {card.image_url && (
                     <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-black/30">
-                      <img src={card.image_url} alt={card.name} className="h-48 w-full object-cover" />
+                      <img src={card.image_url} alt={card.name} className="h-72 w-full object-contain p-3" />
                     </div>
                   )}
                   <button
@@ -338,12 +424,13 @@ export default function SearchPage() {
                   >
                     {added ? "Added to collection" : savingIds.includes(card.id) ? "Saving..." : !loggedIn ? "Login required" : "Add to collection"}
                   </button>
+                  <button type="button" onClick={() => void addToWantList(card)} disabled={!loggedIn || wantedIds.includes(card.id)} className="mt-3 w-full rounded-3xl border border-violet-300/40 px-4 py-3 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-60">{wantedIds.includes(card.id) ? "In your Want List" : "I WANT THIS"}</button>
                 </article>
               );
             })
           ) : (
             <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center text-zinc-300 shadow-[0_20px_60px_rgba(124,58,237,0.08)]">
-              No cards match that query. Try a different name, set, or rarity.
+              {error ? "No live card results are available right now." : "No cards match that query. Try a different name, set, or rarity."}
             </div>
           )}
         </section>
