@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getCurrentAccessToken } from "../lib/supabase";
+import ReturnAddressFields, { formatReturnAddress, type ReturnAddress } from "../components/ReturnAddressFields";
 
 type Offer = {
   id: number;
@@ -15,6 +16,8 @@ type Offer = {
   created_at?: string | null;
   photoUrls?: string[];
   pullshieldShippingAddress?: string | null;
+  addressTradeId?: number | null;
+  needsReturnAddress?: boolean;
 };
 
 type Listing = { id: number; offeredCard: string };
@@ -45,7 +48,7 @@ function statusText(status?: string) {
   return (status ?? "pending").replaceAll("_", " ");
 }
 
-function Tracker({ status, pullshieldShippingAddress }: Pick<Offer, "status" | "pullshieldShippingAddress">) {
+function Tracker({ status, pullshieldShippingAddress, addressTradeId, needsReturnAddress, onAddressSaved }: Pick<Offer, "status" | "pullshieldShippingAddress" | "addressTradeId" | "needsReturnAddress"> & { onAddressSaved: () => void }) {
   const steps = ["awaiting_shipment", "received", "authenticated", "return_shipped", "completed"];
   const current = Math.max(0, steps.indexOf(status ?? "awaiting_shipment"));
   const nextAction: Record<string, { title: string; detail: string }> = {
@@ -58,6 +61,7 @@ function Tracker({ status, pullshieldShippingAddress }: Pick<Offer, "status" | "
   const action = nextAction[status ?? "awaiting_shipment"] ?? nextAction.awaiting_shipment;
 
   return <>
+    {needsReturnAddress && addressTradeId && <AcceptedAddressForm tradeId={addressTradeId} onSaved={onAddressSaved} />}
     <div className="mt-6 rounded-2xl border border-violet-400/25 bg-violet-500/[0.08] p-4">
       <p className="text-sm font-semibold text-violet-100">{action.title}</p>
       <p className="mt-1 text-sm leading-6 text-zinc-300">{action.detail}</p>
@@ -69,6 +73,25 @@ function Tracker({ status, pullshieldShippingAddress }: Pick<Offer, "status" | "
     </div>
     {status === "awaiting_shipment" && pullshieldShippingAddress && <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Send your card to PullShield</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white">{pullshieldShippingAddress}</p><p className="mt-2 text-xs text-zinc-400">Use tracked, insured shipping and include your trade number inside the package.</p></div>}
   </>;
+}
+
+function AcceptedAddressForm({ tradeId, onSaved }: { tradeId: number; onSaved: () => void }) {
+  const [address, setAddress] = useState<ReturnAddress>({ street: "", unit: "", city: "", state: "", zip: "" });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  async function save(event: FormEvent) {
+    event.preventDefault(); setSaving(true); setMessage("");
+    try {
+      const token = await getCurrentAccessToken();
+      if (!token) throw new Error("Please sign in to save your address.");
+      const response = await fetch("/api/trades", { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ tradeId, shippingAddress: formatReturnAddress(address) }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Unable to save your address.");
+      onSaved();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to save your address."); }
+    finally { setSaving(false); }
+  }
+  return <form onSubmit={save} className="mt-6 rounded-3xl border border-amber-300/35 bg-amber-300/[0.08] p-5"><p className="text-sm font-bold text-amber-100">One final step: add your private return address</p><p className="mt-2 text-sm leading-6 text-zinc-300">Your offer has been accepted. PullShield needs this address only to send your new card after verification.</p><div className="mt-4"><ReturnAddressFields value={address} onChange={setAddress} /></div><button disabled={saving} className="mt-4 w-full rounded-2xl bg-violet-600 px-4 py-3 font-semibold disabled:opacity-60">{saving ? "Saving securely..." : "Save return address"}</button>{message && <p className="mt-3 text-sm text-rose-200">{message}</p>}</form>;
 }
 
 export default function OffersPage() {
@@ -138,7 +161,7 @@ export default function OffersPage() {
     <section className="mt-6 space-y-5">{loading ? <p className="text-zinc-400">Loading your offers...</p> : visibleOffers.length ? visibleOffers.map((offer) => {
       const listing = offer.listing_id ? listingById.get(offer.listing_id) : undefined;
       const isNewIncoming = activeTab === "new" && incomingIds.has(offer.id) && (offer.status ?? "pending") === "pending";
-      return <article key={offer.id} className="rounded-3xl border border-white/10 bg-white/[0.04] p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">{isNewIncoming ? "Offer for" : (offer.status ?? "") === "countered" ? "Counter offer" : "Trade"}</p><h2 className="mt-2 text-xl font-semibold">{listing?.offeredCard ?? offer.desiredCard}</h2><p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">Card offered</p><p className="mt-2 text-lg font-semibold">{offer.offeredCard}</p><p className="mt-2 text-sm text-zinc-400">From {offer.name}</p>{offer.photoUrls?.length ? <div className="mt-4 grid max-w-sm grid-cols-4 gap-2">{offer.photoUrls.slice(0, 4).map((url, index) => <img key={url} src={url} alt={`${offer.offeredCard} photo ${index + 1}`} className="aspect-square rounded-xl border border-white/10 object-cover" />)}</div> : null}{offer.notes && <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300">{offer.notes}</p>}</div><div className="flex shrink-0 flex-col gap-3"><span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-semibold capitalize text-zinc-200">{(offer.status ?? "pending") === "refused" ? "declined" : statusText(offer.status)}</span>{isNewIncoming && <><button disabled={actingId === offer.id} onClick={() => void act(offer.id, "accept")} className="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold transition hover:bg-violet-500 disabled:opacity-50">{actingId === offer.id ? "Saving..." : "Accept offer"}</button><button disabled={actingId === offer.id} onClick={() => void act(offer.id, "counter")} className="rounded-2xl border border-amber-300/45 px-5 py-3 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/10 disabled:opacity-50">{actingId === offer.id ? "Saving..." : "Counter offer"}</button><button disabled={actingId === offer.id} onClick={() => void act(offer.id, "refuse")} className="rounded-2xl border border-rose-300/40 px-5 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/10 disabled:opacity-50">{actingId === offer.id ? "Saving..." : "Decline offer"}</button></>}{listing && <Link href={`/marketplace/${listing.id}`} className="text-center text-sm font-semibold text-violet-300 hover:text-violet-200">View listing</Link>}</div></div>{activeTab === "accepted" && <Tracker status={offer.status} pullshieldShippingAddress={offer.pullshieldShippingAddress} />}</article>;
+      return <article key={offer.id} className="rounded-3xl border border-white/10 bg-white/[0.04] p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">{isNewIncoming ? "Offer for" : (offer.status ?? "") === "countered" ? "Counter offer" : "Trade"}</p><h2 className="mt-2 text-xl font-semibold">{listing?.offeredCard ?? offer.desiredCard}</h2><p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">Card offered</p><p className="mt-2 text-lg font-semibold">{offer.offeredCard}</p><p className="mt-2 text-sm text-zinc-400">From {offer.name}</p>{offer.photoUrls?.length ? <div className="mt-4 grid max-w-sm grid-cols-4 gap-2">{offer.photoUrls.slice(0, 4).map((url, index) => <img key={url} src={url} alt={`${offer.offeredCard} photo ${index + 1}`} className="aspect-square rounded-xl border border-white/10 object-cover" />)}</div> : null}{offer.notes && <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300">{offer.notes}</p>}</div><div className="flex shrink-0 flex-col gap-3"><span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-semibold capitalize text-zinc-200">{(offer.status ?? "pending") === "refused" ? "declined" : statusText(offer.status)}</span>{isNewIncoming && <><button disabled={actingId === offer.id} onClick={() => void act(offer.id, "accept")} className="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold transition hover:bg-violet-500 disabled:opacity-50">{actingId === offer.id ? "Saving..." : "Accept offer"}</button><button disabled={actingId === offer.id} onClick={() => void act(offer.id, "counter")} className="rounded-2xl border border-amber-300/45 px-5 py-3 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/10 disabled:opacity-50">{actingId === offer.id ? "Saving..." : "Counter offer"}</button><button disabled={actingId === offer.id} onClick={() => void act(offer.id, "refuse")} className="rounded-2xl border border-rose-300/40 px-5 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/10 disabled:opacity-50">{actingId === offer.id ? "Saving..." : "Decline offer"}</button></>}{listing && <Link href={`/marketplace/${listing.id}`} className="text-center text-sm font-semibold text-violet-300 hover:text-violet-200">View listing</Link>}</div></div>{activeTab === "accepted" && <Tracker status={offer.status} pullshieldShippingAddress={offer.pullshieldShippingAddress} addressTradeId={offer.addressTradeId} needsReturnAddress={offer.needsReturnAddress} onAddressSaved={() => void loadOffers()} />}</article>;
     }) : <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center text-zinc-400"><p className="text-lg font-semibold text-white">{activeTab === "new" ? "No trade offers yet." : `No ${activeTab} offers yet.`}</p><p className="mt-2">{activeTab === "new" ? "Find a card you want and make your first offer." : "When a trade reaches this stage, it will appear here."}</p>{activeTab === "new" && <Link href="/marketplace/browse" className="mt-6 inline-flex rounded-2xl bg-violet-600 px-5 py-3 font-semibold text-white transition hover:bg-violet-500">BROWSE CARDS TO TRADE</Link>}</div>}</section>
   </div></main>;
 }

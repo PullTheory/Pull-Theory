@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { addTrade, counterOffer, deleteListing, getTrade, getTrades, getUserFromToken } from "../../lib/tradesStore";
+import { addTrade, counterOffer, deleteListing, getTrade, getTrades, getUserFromToken, updateShippingAddress } from "../../lib/tradesStore";
 import { getTraderBadge } from "../../lib/traderBadges";
 import { recordLifecycleEvent } from "../../lib/trafficStore";
+import { notifyMembersOfNewListing } from "../../lib/notifications";
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     const name = profileName || requestedName;
     const offeredCard = String(body?.offeredCard ?? "").trim();
     let desiredCard = String(body?.desiredCard ?? "Open to offers").trim();
-    const shippingAddress = String(body?.shippingAddress ?? "").trim();
+    const shippingAddress = String(body?.shippingAddress ?? "").trim() || "COLLECT_AFTER_ACCEPTANCE";
     const photoUrls = Array.isArray(body?.photoUrls)
       ? body.photoUrls.filter((url: unknown): url is string => typeof url === "string" && /^https?:\/\//.test(url)).slice(0, 6)
       : [];
@@ -29,9 +30,9 @@ export async function POST(request: Request) {
       ? null
       : Number(suppliedListingId);
 
-    if (!name || !offeredCard || !shippingAddress || body?.agree !== true) {
+    if (!name || !offeredCard || body?.agree !== true) {
       return NextResponse.json(
-        { error: "Name, card, secure shipping address, and agreement are required." },
+        { error: "Name, card, and agreement are required." },
         { status: 400 }
       );
     }
@@ -75,11 +76,39 @@ export async function POST(request: Request) {
       photoUrls,
     });
     await recordLifecycleEvent(user.id, isListing ? "first_tradeable_card" : "first_offer");
+    if (isListing) {
+      try {
+        await notifyMembersOfNewListing({ listingId: trade.id, offeredCard: trade.offeredCard, desiredCard: trade.desiredCard, ownerUserId: user.id });
+      } catch (notificationError) {
+        console.error("[api/trades] listing notification failed", notificationError);
+      }
+    }
 
     return NextResponse.json({ trade }, { status: 201 });
   } catch (error) {
     console.error("[api/trades] unable to create trade", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to create the trade." }, { status: 400 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const authorization = request.headers.get("authorization") ?? "";
+    const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
+    const user = await getUserFromToken(token);
+    if (!user) return NextResponse.json({ error: "Please sign in to save your return address." }, { status: 401 });
+    const body = await request.json();
+    const tradeId = Number(body?.tradeId);
+    const shippingAddress = String(body?.shippingAddress ?? "").trim();
+    if (!Number.isInteger(tradeId) || tradeId <= 0 || shippingAddress.length < 10) {
+      return NextResponse.json({ error: "A complete return address is required." }, { status: 400 });
+    }
+    const trade = await updateShippingAddress(tradeId, user.id, shippingAddress);
+    if (!trade) return NextResponse.json({ error: "Trade not found or unauthorized." }, { status: 404 });
+    return NextResponse.json({ saved: true });
+  } catch (error) {
+    console.error("[api/trades] unable to save return address", error);
+    return NextResponse.json({ error: "Unable to save your return address." }, { status: 500 });
   }
 }
 

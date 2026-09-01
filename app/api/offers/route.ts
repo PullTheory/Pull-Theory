@@ -18,10 +18,15 @@ export async function GET(request: Request) {
           listingIds.has(trade.listing_id) &&
           String(trade.user_id) !== String(user.id)
       )
-      .map(({ email, shippingAddress, acceptedBy, authenticatorAddress, ...offer }) => ({
-        ...offer,
-        pullshieldShippingAddress: authenticatorAddress ?? null,
-      }));
+      .map(({ email, shippingAddress, acceptedBy, authenticatorAddress, ...offer }) => {
+        const listing = ownListings.items.find((item) => item.id === offer.listing_id);
+        return {
+          ...offer,
+          pullshieldShippingAddress: authenticatorAddress ?? null,
+          addressTradeId: listing?.id ?? null,
+          needsReturnAddress: !listing?.shippingAddress || listing.shippingAddress === "COLLECT_AFTER_ACCEPTANCE",
+        };
+      });
 
     const acceptedOffers = allTrades.items
       .filter(
@@ -31,10 +36,17 @@ export async function GET(request: Request) {
           trade.status !== 'pending' &&
           (String(trade.user_id) === String(user.id) || listingIds.has(trade.listing_id))
       )
-      .map(({ email, shippingAddress, acceptedBy, authenticatorAddress, ...offer }) => ({
-        ...offer,
-        pullshieldShippingAddress: authenticatorAddress ?? null,
-      }));
+      .map(({ email, shippingAddress, acceptedBy, authenticatorAddress, ...offer }) => {
+        const ownRecord = String(offer.user_id) === String(user.id)
+          ? { id: offer.id, shippingAddress }
+          : ownListings.items.find((item) => item.id === offer.listing_id);
+        return {
+          ...offer,
+          pullshieldShippingAddress: authenticatorAddress ?? null,
+          addressTradeId: ownRecord?.id ?? null,
+          needsReturnAddress: !ownRecord?.shippingAddress || ownRecord.shippingAddress === "COLLECT_AFTER_ACCEPTANCE",
+        };
+      });
 
     return NextResponse.json({
       offers,

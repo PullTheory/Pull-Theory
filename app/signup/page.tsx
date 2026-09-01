@@ -23,9 +23,13 @@ export default function SignupPage() {
   const [plan, setPlan] = useState<(typeof plans)[number]["id"]>("collector");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [checkingAccount, setCheckingAccount] = useState(true);
+  const [returnTo, setReturnTo] = useState("/marketplace/browse");
 
   useEffect(() => {
     const requestedPlan = new URLSearchParams(window.location.search).get("plan");
+    const requestedReturn = new URLSearchParams(window.location.search).get("returnTo");
+    const safeReturn = requestedReturn?.startsWith("/") && !requestedReturn.startsWith("//") ? requestedReturn : "/marketplace/browse";
+    setReturnTo(safeReturn);
     if (plans.some((option) => option.id === requestedPlan)) {
       setPlan(requestedPlan as (typeof plans)[number]["id"]);
     }
@@ -33,7 +37,7 @@ export default function SignupPage() {
       const supabase = getSupabaseClient();
       const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
       if (data.session?.user) {
-        router.replace("/marketplace/browse");
+        router.replace(safeReturn);
         return;
       }
       setCheckingAccount(false);
@@ -79,7 +83,7 @@ export default function SignupPage() {
     if (error) {
       setMessage(error.message);
     } else if (data?.session?.user) {
-      router.replace("/marketplace/browse");
+      router.replace(returnTo);
     } else if (data?.user) {
       setConfirmationEmail(email.trim());
       void recordTrafficEvent("confirmation_sent");

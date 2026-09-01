@@ -149,6 +149,18 @@ export async function getUserFromToken(token: string | null) {
   }
 }
 
+export async function updateShippingAddress(tradeId: number, userId: string, shippingAddress: string) {
+  const trade = await getTrade(tradeId);
+  if (!trade || String(trade.user_id) !== String(userId)) return null;
+  if (supabase) {
+    const { data, error } = await supabase.from('trades').update({ shipping_address: shippingAddress }).eq('id', tradeId).eq('user_id', userId).select('*').single();
+    if (error) throw error;
+    return normalizeRow(data as any);
+  }
+  trade.shippingAddress = shippingAddress;
+  return trade;
+}
+
 export async function acceptTrade(id: number, email: string) {
   if (supabase) {
     const t = await getTrade(id);
