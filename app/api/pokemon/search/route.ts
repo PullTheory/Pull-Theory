@@ -26,14 +26,18 @@ export async function GET(request: Request) {
   if (query) {
     // Include card variants such as "Mimikyu ex" and "Charizard V".
     const searchName = searchableQuery || query;
-    // The card provider is most reliable with a single-token wildcard. We do
-    // the full name and card-number comparison below after receiving its data.
+    // The provider is most reliable with a single-token wildcard. When a
+    // number is supplied, include it in the provider lookup too — this avoids
+    // downloading every printing of a popular card such as Pikachu.
     const nameQuery = `name:${searchName.split(/\s+/)[0]}*`;
-    // Card numbers often have a suffix, for example 242/SV-P. Fetch the
-    // matching card name first, then match the typed number below so entering
-    // simply 242 still finds that exact card.
-    if (cardNumber) pageSize = 250;
-    endpointUrl.searchParams.set("q", nameQuery);
+    const providerNumber = cardNumber.replace(/[^a-zA-Z0-9\-]/g, "");
+    // Card numbers often have a suffix, for example 242/SV-P. The wildcard
+    // makes a typed 242 match that card while the precise filter below makes
+    // sure the response is the card the collector intended.
+    endpointUrl.searchParams.set(
+      "q",
+      providerNumber ? `${nameQuery} number:${providerNumber}*` : nameQuery,
+    );
   } else if (cardNumber) {
     endpointUrl.searchParams.set("q", `number:${cardNumber.replace(/[^a-zA-Z0-9\-]/g, "")}*`);
   }
