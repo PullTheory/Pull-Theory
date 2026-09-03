@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const query = url.searchParams.get("q")?.trim() ?? "";
   const cardNumber = url.searchParams.get("number")?.trim() ?? "";
   const requestedLimit = Number(url.searchParams.get("limit") ?? "250");
-  const pageSize = Number.isFinite(requestedLimit)
+  let pageSize = Number.isFinite(requestedLimit)
     ? Math.min(250, Math.max(1, Math.floor(requestedLimit)))
     : 250;
   const apiKey = process.env.POKEMON_API_KEY;
@@ -25,14 +25,16 @@ export async function GET(request: Request) {
     // Include card variants such as "Mimikyu ex" and "Charizard V".
     const searchableQuery = query.replace(/[^a-zA-Z0-9 '\-]/g, "").trim();
     const quotedName = (searchableQuery || query).replace(/"/g, "\\\"");
-    const nameQuery = cardNumber
-      ? `name:\"${quotedName}\"`
-      : `name:${quotedName}*`;
-    const numberQuery = cardNumber.replace(/[^a-zA-Z0-9\-]/g, "");
-    endpointUrl.searchParams.set("q", numberQuery ? `${nameQuery} number:\"${numberQuery}\"` : nameQuery);
+    const nameQuery = cardNumber ? `name:\"${quotedName}\"` : `name:${quotedName}*`;
+    // Card numbers often have a suffix, for example 242/SV-P. Fetch the
+    // matching card name first, then match the typed number below so entering
+    // simply 242 still finds that exact card.
+    if (cardNumber) pageSize = 250;
+    endpointUrl.searchParams.set("q", nameQuery);
   } else if (cardNumber) {
-    endpointUrl.searchParams.set("q", `number:\"${cardNumber.replace(/[^a-zA-Z0-9\-]/g, "")}\"`);
+    endpointUrl.searchParams.set("q", `number:${cardNumber.replace(/[^a-zA-Z0-9\-]/g, "")}*`);
   }
+  endpointUrl.searchParams.set("pageSize", String(pageSize));
 
   let lastError: string | null = null;
 
@@ -62,8 +64,14 @@ export async function GET(request: Request) {
       }
 
       const json = await response.json();
+      const normalizedNumber = cardNumber.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+      const cards = normalizedNumber
+        ? (json.data ?? []).filter((card: { number?: string }) =>
+            String(card.number ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase().startsWith(normalizedNumber),
+          )
+        : (json.data ?? []);
       return NextResponse.json(
-        { cards: json.data ?? [], totalCount: json.totalCount ?? 0 },
+        { cards, totalCount: cards.length },
         { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } },
       );
     } catch (error) {
