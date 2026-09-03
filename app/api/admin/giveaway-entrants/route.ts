@@ -1,13 +1,18 @@
 import { createClient } from "@supabase/supabase-js";
+import { getUserFromToken } from "../../../lib/tradesStore";
+import { isPullTheoryOperator } from "../../../lib/operator";
 
 export const dynamic = "force-dynamic";
 
 type Entrant = { id: string; username: string; email: string; signedUpAt: string; emailConfirmed: boolean };
 
 export async function GET(request: Request) {
-  const suppliedSecret = request.headers.get("x-authenticator-secret");
-  const expectedSecret = process.env.AUTHENTICATOR_SECRET;
-  if (!expectedSecret || !suppliedSecret || suppliedSecret !== expectedSecret) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const authorization = request.headers.get("authorization") ?? "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
+  const user = await getUserFromToken(token);
+  if (!user || !isPullTheoryOperator(user.email)) {
+    return Response.json({ error: "Giveaway entries are only available to the PullShield operator account." }, { status: 403 });
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;

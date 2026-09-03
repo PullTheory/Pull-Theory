@@ -2,20 +2,16 @@ import { NextResponse } from "next/server";
 import { getTrade, getTrades, getUserFromToken, updateShipmentStatus } from "../../lib/tradesStore";
 import { sendNotification } from "../../lib/notifications";
 import { getLifecycleSummary, getSignupSummary, getTrafficSummary } from "../../lib/trafficStore";
+import { isPullTheoryOperator } from "../../lib/operator";
 
 const allowedStatuses = ["awaiting_shipment", "received", "authenticated", "return_shipped", "completed", "cancelled"] as const;
 type ShipmentStatus = (typeof allowedStatuses)[number];
-
-function isOperator(email?: string | null) {
-  const configuredEmail = process.env.PULL_THEORY_AUTHENTICATOR_EMAIL?.trim().toLowerCase();
-  return Boolean(configuredEmail && email?.trim().toLowerCase() === configuredEmail);
-}
 
 async function operatorFor(request: Request) {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
   const user = await getUserFromToken(token);
-  return user && isOperator(user.email) ? user : null;
+  return user && isPullTheoryOperator(user.email) ? user : null;
 }
 
 // The navigation uses this lightweight check so the staff-only desk link is

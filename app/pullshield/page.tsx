@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { getCurrentAccessToken } from "../lib/supabase";
 
 type Party = {
@@ -174,12 +175,15 @@ export default function PullShieldDeskPage() {
                 Work through your authentication queue one clear step at a time.
               </p>
             </div>
-            <button
-              onClick={() => void load()}
-              className="rounded-xl border border-amber-300/35 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/10"
-            >
-              Refresh desk
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/admin/giveaway" className="rounded-xl bg-amber-300 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-200">Giveaway entries</Link>
+              <button
+                onClick={() => void load()}
+                className="rounded-xl border border-amber-300/35 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/10"
+              >
+                Refresh desk
+              </button>
+            </div>
           </div>
         </section>
         {message && (
