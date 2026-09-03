@@ -37,8 +37,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if ((isListing || listingId !== null) && photoUrls.length < 4) {
-      return NextResponse.json({ error: "At least 4 card photos are required for listings and offers." }, { status: 400 });
+    if (isListing && photoUrls.length < 2) {
+      return NextResponse.json({ error: "Please add a front and back photo of your card before listing it." }, { status: 400 });
+    }
+
+    if (!isListing && listingId !== null && photoUrls.length < 4) {
+      return NextResponse.json({ error: "At least 4 card photos are required for trade offers." }, { status: 400 });
     }
 
     // An offer must belong to a real marketplace listing. The server, rather

@@ -10,8 +10,8 @@ function extensionFor(file: File) {
   return file.type === "image/png" ? "png" : "jpg";
 }
 
-export async function uploadTradePhotos(files: File[]) {
-  if (files.length < 4) throw new Error("Please add at least 4 clear card photos.");
+export async function uploadTradePhotos(files: File[], minimumPhotos = 4) {
+  if (files.length < minimumPhotos) throw new Error(`Please add at least ${minimumPhotos} clear card photos.`);
   if (files.length > MAX_PHOTOS) throw new Error("You can upload up to 6 card photos.");
 
   const supabase = getSupabaseClient();

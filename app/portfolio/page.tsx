@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "../lib/supabase";
 
-type Card = { id: string; card_name: string; card_set?: string; quantity_owned?: number; current_market_value?: string | number; price?: string | number; image_url?: string };
+type Card = { id: string; card_id?: string; card_name: string; card_set?: string; card_number?: string; rarity?: string; language?: string; quantity_owned?: number; current_market_value?: string | number; price?: string | number; image_url?: string };
 
 function valueOf(value: unknown) {
   if (typeof value === "number") return value;
@@ -49,8 +49,15 @@ export default function PortfolioPage() {
 
   function putUpForTrade(card: Card) {
     window.sessionStorage.setItem("pull-theory-listing-draft", JSON.stringify({
-      offeredCard: [card.card_name, card.card_set].filter(Boolean).join(" · "),
-      notes: "Added from your Pull Theory portfolio.",
+      cardName: card.card_name,
+      selectedCard: true,
+      details: {
+        setName: card.card_set ?? "",
+        cardNumber: card.card_number ?? "",
+        estimatedValue: String(card.current_market_value ?? card.price ?? ""),
+      },
+      imageUrl: card.image_url ?? "",
+      rarity: card.rarity ?? "",
     }));
     router.push("/marketplace/list");
   }

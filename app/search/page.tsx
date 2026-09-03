@@ -288,6 +288,25 @@ export default function SearchPage() {
     } catch (error) { setWantMessage(error instanceof Error ? error.message : "Unable to add this card to your Want List."); }
   }
 
+  function listForTrade(card: CardResult) {
+    if (!loggedIn) {
+      setCollectionError("Please log in to list a card for trade.");
+      return;
+    }
+    window.sessionStorage.setItem("pull-theory-listing-draft", JSON.stringify({
+      cardName: card.name,
+      selectedCard: true,
+      details: {
+        setName: card.set,
+        cardNumber: card.card_number,
+        estimatedValue: String(card.current_market_value ?? card.price ?? ""),
+      },
+      imageUrl: card.image_url ?? "",
+      rarity: card.rarity ?? "",
+    }));
+    router.push("/marketplace/list");
+  }
+
   return (
     <main className="min-h-screen bg-[#050506]/70 px-6 py-12 text-white">
       <div className="mx-auto max-w-6xl space-y-10">
@@ -425,6 +444,7 @@ export default function SearchPage() {
                     {added ? "Added to collection" : savingIds.includes(card.id) ? "Saving..." : !loggedIn ? "Login required" : "Add to collection"}
                   </button>
                   <button type="button" onClick={() => void addToWantList(card)} disabled={!loggedIn || wantedIds.includes(card.id)} className="mt-3 w-full rounded-3xl border border-violet-300/40 px-4 py-3 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-60">{wantedIds.includes(card.id) ? "In your Want List" : "I WANT THIS"}</button>
+                  <button type="button" onClick={() => listForTrade(card)} disabled={!loggedIn} className="mt-3 w-full rounded-3xl border border-emerald-300/40 bg-emerald-400/[0.08] px-4 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/[0.16] disabled:cursor-not-allowed disabled:opacity-60">List for trade</button>
                 </article>
               );
             })
