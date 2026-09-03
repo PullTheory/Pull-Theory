@@ -23,6 +23,9 @@ type CardResult = {
   image_url?: string;
 };
 
+const searchCache = new Map<string, CardResult[]>();
+const QUICK_SEARCH_LIMIT = 40;
+
 const sampleCards: CardResult[] = [
   {
     id: "1",
@@ -153,7 +156,7 @@ export default function SearchPage() {
   }, [addedIds]);
 
   useEffect(() => {
-    const hasSearchTerm = query.trim().length >= 2 || cardNumber.trim().length > 0;
+    const hasSearchTerm = query.trim().length >= 3 || cardNumber.trim().length > 0;
     if (!hasSearchTerm) {
       setCards([]);
       setError("");
@@ -162,9 +165,17 @@ export default function SearchPage() {
     }
 
     const controller = new AbortController();
+    const cacheKey = `${query.trim().toLowerCase()}::${cardNumber.trim().toLowerCase()}`;
+    const cached = searchCache.get(cacheKey);
+    if (cached) {
+      setCards(cached);
+      setError("");
+      setLoading(false);
+      return () => controller.abort();
+    }
     const timeout = window.setTimeout(() => {
       void loadCards();
-    }, 300);
+    }, 180);
 
     async function loadCards() {
       setLoading(true);
@@ -172,7 +183,7 @@ export default function SearchPage() {
 
       try {
         const response = await fetch(
-          `/api/pokemon/search?q=${encodeURIComponent(query)}&number=${encodeURIComponent(cardNumber)}`,
+          `/api/pokemon/search?q=${encodeURIComponent(query)}&number=${encodeURIComponent(cardNumber)}&limit=${QUICK_SEARCH_LIMIT}`,
           {
           signal: controller.signal,
           }
@@ -212,6 +223,7 @@ export default function SearchPage() {
 
         if (!controller.signal.aborted) {
           setCards(results);
+          searchCache.set(cacheKey, results);
         }
       } catch (err) {
         if (controller.signal.aborted) {
@@ -348,8 +360,8 @@ export default function SearchPage() {
               </div>
             </div>
           </div>
-          {query.trim().length === 1 && !cardNumber.trim() && (
-            <p className="mt-5 text-sm text-zinc-400">Keep typing—matches will appear after one more letter.</p>
+          {query.trim().length > 0 && query.trim().length < 3 && !cardNumber.trim() && (
+            <p className="mt-5 text-sm text-zinc-400">Keep typing—matches appear after 3 letters, or enter a card number for an exact lookup.</p>
           )}
           {query.trim().length >= 2 && !loading && cards.length > 0 && (
             <div className="mt-6 rounded-3xl border border-violet-400/20 bg-black/25 p-4">

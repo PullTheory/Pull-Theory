@@ -53,8 +53,8 @@ export default function MarketplaceListingPage() {
   useEffect(() => {
     if (selectedCard || cardName.trim().length < 3) { setSuggestions([]); return; }
     const timer = window.setTimeout(async () => {
-      try { const response = await fetch(`/api/pokemon/search?q=${encodeURIComponent(cardName.trim())}`); const data = await response.json(); setSuggestions(response.ok ? (data.cards ?? []).slice(0, 6) : []); } catch { setSuggestions([]); }
-    }, 350);
+      try { const response = await fetch(`/api/pokemon/search?q=${encodeURIComponent(cardName.trim())}&limit=20`); const data = await response.json(); setSuggestions(response.ok ? (data.cards ?? []).slice(0, 6) : []); } catch { setSuggestions([]); }
+    }, 180);
     return () => window.clearTimeout(timer);
   }, [cardName, selectedCard]);
 
