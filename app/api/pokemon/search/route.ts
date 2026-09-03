@@ -21,11 +21,14 @@ export async function GET(request: Request) {
   // searches such as Pikachu (244+ printings) together on one page.
   endpointUrl.searchParams.set("pageSize", String(pageSize));
 
+  const searchableQuery = query.replace(/[^a-zA-Z0-9 '\-]/g, "").trim();
+
   if (query) {
     // Include card variants such as "Mimikyu ex" and "Charizard V".
-    const searchableQuery = query.replace(/[^a-zA-Z0-9 '\-]/g, "").trim();
-    const quotedName = (searchableQuery || query).replace(/"/g, "\\\"");
-    const nameQuery = cardNumber ? `name:\"${quotedName}\"` : `name:${quotedName}*`;
+    const searchName = searchableQuery || query;
+    // The card provider is most reliable with a single-token wildcard. We do
+    // the full name and card-number comparison below after receiving its data.
+    const nameQuery = `name:${searchName.split(/\s+/)[0]}*`;
     // Card numbers often have a suffix, for example 242/SV-P. Fetch the
     // matching card name first, then match the typed number below so entering
     // simply 242 still finds that exact card.
@@ -56,7 +59,14 @@ export async function GET(request: Request) {
         // Retry those temporary responses before reporting a failure.
         if ((response.status === 429 || response.status >= 500) && attempt < 2) {
           const retryAfter = Number(response.headers.get("retry-after"));
-          await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 350 * attempt);
+          // Never leave a collector waiting a full minute while the provider
+          // is temporarily unavailable. Retry quickly, then let the page
+          // report a clear error instead of appearing stuck.
+          await sleep(
+            Number.isFinite(retryAfter) && retryAfter > 0
+              ? Math.min(retryAfter * 1000, 1000)
+              : 350 * attempt,
+          );
           continue;
         }
 
@@ -64,12 +74,13 @@ export async function GET(request: Request) {
       }
 
       const json = await response.json();
+      const normalizedName = (searchableQuery || query).replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
       const normalizedNumber = cardNumber.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-      const cards = normalizedNumber
-        ? (json.data ?? []).filter((card: { number?: string }) =>
-            String(card.number ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase().startsWith(normalizedNumber),
-          )
-        : (json.data ?? []);
+      const cards = (json.data ?? []).filter((card: { name?: string; number?: string }) => {
+        const nameMatches = !normalizedName || String(card.name ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase().startsWith(normalizedName);
+        const numberMatches = !normalizedNumber || String(card.number ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase().startsWith(normalizedNumber);
+        return nameMatches && numberMatches;
+      });
       return NextResponse.json(
         { cards, totalCount: cards.length },
         { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } },
