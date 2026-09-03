@@ -24,13 +24,14 @@ export async function GET(request: Request) {
   if (query) {
     // Include card variants such as "Mimikyu ex" and "Charizard V".
     const searchableQuery = query.replace(/[^a-zA-Z0-9 '\-]/g, "").trim();
+    const quotedName = (searchableQuery || query).replace(/"/g, "\\\"");
     const nameQuery = cardNumber
-      ? `!name:\"${searchableQuery || query}\"`
-      : `name:${searchableQuery || query}*`;
+      ? `name:\"${quotedName}\"`
+      : `name:${quotedName}*`;
     const numberQuery = cardNumber.replace(/[^a-zA-Z0-9\-]/g, "");
-    endpointUrl.searchParams.set("q", numberQuery ? `${nameQuery} number:${numberQuery}` : nameQuery);
+    endpointUrl.searchParams.set("q", numberQuery ? `${nameQuery} number:\"${numberQuery}\"` : nameQuery);
   } else if (cardNumber) {
-    endpointUrl.searchParams.set("q", `number:${cardNumber.replace(/[^a-zA-Z0-9\-]/g, "")}`);
+    endpointUrl.searchParams.set("q", `number:\"${cardNumber.replace(/[^a-zA-Z0-9\-]/g, "")}\"`);
   }
 
   let lastError: string | null = null;
