@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       }
 
       const listing = await getTrade(listingId);
-      if (!listing || !listing.is_listing) {
+      if (!listing || !listing.is_listing || (listing.status && listing.status !== "pending")) {
         return NextResponse.json({ error: "That marketplace listing is no longer available." }, { status: 404 });
       }
 

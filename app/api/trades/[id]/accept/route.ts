@@ -41,7 +41,9 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const id = Number(idParam);
   if (Number.isNaN(id)) return NextResponse.json({ error: 'invalid id' }, { status: 400 });
   const trade = await getTrade(id);
-  if (!trade) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  if (!trade || !trade.is_listing || (trade.status && trade.status !== 'pending')) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 });
+  }
   // A marketplace page is public. Keep the seller's email and return address
   // private until a trade has been accepted and the protected workflow begins.
   const { email: _email, shippingAddress: _shippingAddress, acceptedBy: _acceptedBy, authenticatorAddress: _authenticatorAddress, ...publicTrade } = trade;

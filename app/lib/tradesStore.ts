@@ -249,25 +249,40 @@ export async function deleteListing(listingId: number, ownerUserId: string) {
   }
 
   if (supabase) {
-    const { data: offers, error: offersError } = await supabase
+    // Listings may have offers from other collectors. Permanently deleting
+    // those rows can be blocked by database protections, which previously
+    // left the card visible in the marketplace. Marking a pending listing as
+    // cancelled removes it from every public marketplace query immediately,
+    // preserves the collector's portfolio card, and retains a safe record.
+    const { data: removedListing, error: removeListingError } = await supabase
       .from("trades")
-      .select("id, status")
-      .eq("listing_id", listingId);
-    if (offersError) throw offersError;
-
-    if ((offers ?? []).some((offer) => offer.status && offer.status !== "pending")) {
-      return { deleted: false, error: "This listing already has an active or completed trade and cannot be deleted." };
+      .update({ status: "cancelled" })
+      .eq("id", listingId)
+      .eq("user_id", ownerUserId)
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle();
+    if (removeListingError) throw removeListingError;
+    if (!removedListing) {
+      return { deleted: false, error: "This listing has already changed and can no longer be removed." };
     }
 
-    const { error: removeOffersError } = await supabase.from("trades").delete().eq("listing_id", listingId);
-    if (removeOffersError) throw removeOffersError;
-    const { error: removeListingError } = await supabase.from("trades").delete().eq("id", listingId).eq("user_id", ownerUserId);
-    if (removeListingError) throw removeListingError;
+    // Pending offers are no longer actionable after the owner removes their
+    // card. This is intentionally best-effort: the listing is already safely
+    // hidden even if an older database policy prevents this secondary update.
+    const { error: cancelOffersError } = await supabase
+      .from("trades")
+      .update({ status: "cancelled" })
+      .eq("listing_id", listingId)
+      .eq("status", "pending");
+    if (cancelOffersError) console.error("[trades] unable to cancel related offers", cancelOffersError);
     return { deleted: true as const };
   }
 
-  const relatedOfferIds = new Set(memory.filter((trade) => trade.listing_id === listingId).map((trade) => trade.id));
-  memory = memory.filter((trade) => trade.id !== listingId && !relatedOfferIds.has(trade.id));
+  listing.status = "cancelled";
+  memory.forEach((trade) => {
+    if (trade.listing_id === listingId && trade.status === "pending") trade.status = "cancelled";
+  });
   return { deleted: true as const };
 }
 
