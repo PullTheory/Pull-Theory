@@ -10,6 +10,7 @@ const tabs = [
   { label: "PullMatches", href: "/matches", match: "/matches" },
   { label: "My Collection", href: "/portfolio", match: "/portfolio" },
   { label: "Trade Center", href: "/offers", match: "/offers" },
+  { label: "Seller Center", href: "/seller", match: "/seller" },
   { label: "Membership", href: "/pricing", match: "/pricing" },
 ];
 

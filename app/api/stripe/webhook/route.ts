@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import { getStripe } from "../../../lib/stripe";
 import { isPaidPlan, paidPlans } from "../../../lib/stripePlans";
+import { getSaleOrder, updateSaleOrder } from "../../../lib/salesStore";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,23 @@ export async function POST(request: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      if (session.metadata?.kind === "marketplace_sale") {
+        const orderId = Number(session.metadata.sale_order_id);
+        if (Number.isInteger(orderId) && orderId > 0) {
+          const order = await getSaleOrder(orderId);
+          if (order && order.paymentStatus !== "paid" && order.paymentStatus !== "payout_released") {
+            const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+            await updateSaleOrder(orderId, {
+              stripe_checkout_session_id: session.id,
+              stripe_payment_intent_id: paymentIntentId ?? null,
+              payment_status: "paid",
+              order_status: "waiting_for_seller_shipment",
+            });
+            await getAdminClient().from("trades").update({ status: "sold" }).eq("id", order.listingId).eq("status", "pending");
+          }
+        }
+        return NextResponse.json({ received: true });
+      }
       const plan = session.metadata?.plan;
       const userId = session.metadata?.user_id || session.client_reference_id;
       if (userId && isPaidPlan(plan)) {

@@ -25,6 +25,10 @@ export async function POST(request: Request) {
       ? body.photoUrls.filter((url: unknown): url is string => typeof url === "string" && /^https?:\/\//.test(url)).slice(0, 6)
       : [];
     const isListing = Boolean(body?.is_listing);
+    const listingType = body?.listingType === "sell" || body?.listingType === "trade_or_sell" ? body.listingType : "trade";
+    const salePriceCents = body?.salePriceCents === null || body?.salePriceCents === undefined || body?.salePriceCents === ""
+      ? null
+      : Number(body.salePriceCents);
     const suppliedListingId = body?.listing_id;
     const listingId = suppliedListingId === undefined || suppliedListingId === null || suppliedListingId === ""
       ? null
@@ -39,6 +43,10 @@ export async function POST(request: Request) {
 
     if (isListing && photoUrls.length < 2) {
       return NextResponse.json({ error: "Please add a front and back photo of your card before listing it." }, { status: 400 });
+    }
+
+    if (isListing && listingType !== "trade" && (typeof salePriceCents !== "number" || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
+      return NextResponse.json({ error: "Enter a sale price of at least $1.00 for a listing that can be purchased." }, { status: 400 });
     }
 
     if (!isListing && listingId !== null && photoUrls.length < 4) {
@@ -78,6 +86,9 @@ export async function POST(request: Request) {
       is_listing: isListing,
       listing_id: listingId,
       photoUrls,
+      listingType: isListing ? listingType : "trade",
+      salePriceCents: isListing ? salePriceCents : null,
+      currency: "usd",
     });
     await recordLifecycleEvent(user.id, isListing ? "first_tradeable_card" : "first_offer");
     if (isListing) {

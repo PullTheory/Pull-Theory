@@ -13,12 +13,15 @@ export type Trade = {
   user_id?: string | null;
   is_listing?: boolean;
   listing_id?: number | null;
-  status?: 'pending' | 'countered' | 'accepted' | 'awaiting_shipment' | 'received' | 'authenticated' | 'return_shipped' | 'cancelled' | 'refused' | 'completed' | 'shipped' | 'verified' | 'fake';
+  status?: 'pending' | 'countered' | 'accepted' | 'awaiting_shipment' | 'received' | 'authenticated' | 'return_shipped' | 'cancelled' | 'refused' | 'completed' | 'shipped' | 'verified' | 'fake' | 'sold';
   acceptedBy?: string[]; // emails of parties who accepted
   authenticatorAddress?: string | null;
   verificationResult?: string | null;
   created_at?: string | null;
   photoUrls?: string[];
+  listingType?: "trade" | "sell" | "trade_or_sell";
+  salePriceCents?: number | null;
+  currency?: string;
 };
 
 let memory: Trade[] = [];
@@ -49,6 +52,9 @@ export async function addTrade(t: Omit<Trade, 'id' | 'status' | 'acceptedBy' | '
         is_listing: (t as any).is_listing || false,
         listing_id: (t as any).listing_id || null,
         photo_urls: t.photoUrls || [],
+        listing_type: t.listingType || "trade",
+        sale_price_cents: t.salePriceCents ?? null,
+        currency: t.currency || "usd",
         agree: t.agree || false,
         status: 'pending',
       },
@@ -67,6 +73,9 @@ export async function addTrade(t: Omit<Trade, 'id' | 'status' | 'acceptedBy' | '
     verificationResult: null,
     created_at: new Date().toISOString(),
     photoUrls: t.photoUrls || [],
+    listingType: t.listingType || "trade",
+    salePriceCents: t.salePriceCents ?? null,
+    currency: t.currency || "usd",
   };
   memory.push(trade);
   return trade;
@@ -91,6 +100,9 @@ function normalizeRow(row: any): Trade {
     listing_id: row.listing_id || null,
     created_at: row.created_at || null,
     photoUrls: Array.isArray(row.photo_urls) ? row.photo_urls.filter((url: unknown): url is string => typeof url === 'string') : [],
+    listingType: row.listing_type === "sell" || row.listing_type === "trade_or_sell" ? row.listing_type : "trade",
+    salePriceCents: typeof row.sale_price_cents === "number" ? row.sale_price_cents : null,
+    currency: typeof row.currency === "string" ? row.currency : "usd",
   };
 }
 
