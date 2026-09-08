@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import AppHeader from "./components/AppHeader";
 import TrafficTracker from "./components/TrafficTracker";
+import InstallAppPrompt from "./components/InstallAppPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,9 +21,19 @@ export const metadata: Metadata = {
   title: "Pull Theory HQ",
   description: "The home for serious collectors.",
   icons: {
-    icon: [{ url: "/logo.png", type: "image/png" }],
-    apple: [{ url: "/logo.png", type: "image/png" }],
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  applicationName: "Pull Theory",
+  appleWebApp: {
+    capable: true,
+    title: "Pull Theory",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: { telephone: false },
   openGraph: {
     title: "Pull Theory HQ",
     description: "The home for serious collectors.",
@@ -45,6 +56,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#050506",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -61,6 +77,7 @@ export default function RootLayout({
         <TrafficTracker />
         <AppHeader />
         {children}
+        <InstallAppPrompt />
         <Analytics />
         </div>
       </body>
