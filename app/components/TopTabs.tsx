@@ -30,6 +30,7 @@ export default function TopTabs() {
     return () => { active = false; };
   }, []);
   const visibleTabs = canUsePullShield ? [...tabs,
+    { label: "Referral Admin", href: "/admin/referrals", match: "/admin/referrals" },
     { label: "PullShield Desk", href: "/pullshield", match: "/pullshield" },
     { label: "PullShield Verify", href: "/pullshield/authentication", match: "/pullshield/authentication" },
   ] : tabs;
