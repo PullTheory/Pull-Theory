@@ -12,6 +12,7 @@ const tabs = [
   { label: "Trade Center", href: "/offers", match: "/offers" },
   { label: "Seller Center", href: "/seller", match: "/seller" },
   { label: "Membership", href: "/pricing", match: "/pricing" },
+  { label: "Ambassadors", href: "/ambassadors", match: "/ambassadors" },
 ];
 
 export default function TopTabs() {
