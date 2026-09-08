@@ -7,90 +7,18 @@ import { recordTrafficEvent } from "../components/TrafficTracker";
 
 const plans = [
   { id: "collector", name: "Collector", price: "Free", detail: "0 PullShield authentications included" },
-  { id: "trader", name: "Trader", price: "$9.99/mo", detail: "1 PullShield authentication included" },
-  { id: "pro", name: "Pro", price: "$19.99/mo", detail: "3 PullShield authentications included" },
-  { id: "elite", name: "Elite", price: "$34.99/mo", detail: "7 PullShield authentications included" },
+  { id: "trader", name: "Trader", price: "$9.99/mo", detail: "4 PullShield authentications included" },
+  { id: "pro", name: "Pro", price: "$19.99/mo", detail: "8 PullShield authentications included" },
+  { id: "elite", name: "Elite", price: "$34.99/mo", detail: "15 PullShield authentications included" },
 ] as const;
 
 type PlanId = (typeof plans)[number]["id"];
 
 export default function SignupPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
-  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState<PlanId>("collector");
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [checkingAccount, setCheckingAccount] = useState(true);
-  const [returnTo, setReturnTo] = useState("/marketplace/browse");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requestedPlan = params.get("plan");
-    const requestedReturn = params.get("returnTo");
-    const validPlan = plans.some((option) => option.id === requestedPlan) ? requestedPlan as PlanId : "collector";
-    const defaultReturn = validPlan === "collector" ? "/marketplace/browse" : `/pricing?checkout=${validPlan}`;
-    const safeReturn = requestedReturn?.startsWith("/") && !requestedReturn.startsWith("//") ? requestedReturn : defaultReturn;
-    setPlan(validPlan);
-    setReturnTo(safeReturn);
-
-    async function checkAccount() {
-      const supabase = getSupabaseClient();
-      const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-      if (data.session?.user) { router.replace(safeReturn); return; }
-      setCheckingAccount(false);
-      void recordTrafficEvent("signup_opened");
-    }
-    void checkAccount();
-  }, [router]);
-
-  async function handleSignup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setLoading(true); setMessage(""); setConfirmationEmail(null);
-    if (!termsAccepted) { setMessage("You must accept the Pull Theory Terms and PullShield Rules before creating an account."); setLoading(false); return; }
-    const normalizedUsername = username.trim();
-    if (!/^[a-zA-Z0-9_-]{3,24}$/.test(normalizedUsername)) { setMessage("Choose a username with 3–24 letters, numbers, hyphens, or underscores."); setLoading(false); return; }
-    if (password !== confirmPassword) { setMessage("Passwords do not match. Enter the same password twice."); setLoading(false); return; }
-    void recordTrafficEvent("signup_submitted");
-    try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, confirmPassword, username: normalizedUsername, plan, termsAccepted }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) setMessage(result?.error || "We couldn't create your account right now. Please try again.");
-      else { setConfirmationEmail(email.trim()); void recordTrafficEvent(result?.existing ? "signup_existing_account" : "confirmation_sent"); }
-    } catch {
-      setMessage("We couldn't reach the signup service. Please try again.");
-    }
-    setLoading(false);
-  }
-
-  if (checkingAccount) return <main className="min-h-screen bg-black" />;
-  const loginHref = `/login?returnTo=${encodeURIComponent(returnTo)}`;
-
-  return <main className="min-h-screen bg-black px-6 py-12 text-white">
-    <div className="mx-auto max-w-md rounded-3xl border border-violet-500/30 bg-white/5 p-8 shadow-2xl shadow-violet-950/40 backdrop-blur">
-      <a href="/" className="text-sm font-bold uppercase tracking-[0.2em] text-violet-300">Pull Theory HQ</a>
-      <h1 className="mt-8 text-3xl font-semibold">Create your account.</h1>
-      <p className="mt-2 text-zinc-400">Choose your membership, then start buying, selling, trading, and collecting with confidence.</p>
-      <form onSubmit={handleSignup} className="mt-8 space-y-5">
-        <fieldset><legend className="mb-3 block text-sm text-zinc-300">Choose your membership</legend><div className="grid gap-2 sm:grid-cols-2">{plans.map((option) => <label key={option.id} className={`cursor-pointer rounded-2xl border p-3 transition ${plan === option.id ? "border-violet-400 bg-violet-500/15" : "border-white/10 bg-black/25 hover:border-white/25"}`}><input type="radio" name="plan" value={option.id} checked={plan === option.id} onChange={() => { setPlan(option.id); setReturnTo(option.id === "collector" ? "/marketplace/browse" : `/pricing?checkout=${option.id}`); }} className="sr-only"/><span className="block text-sm font-semibold text-white">{option.name} <span className="text-violet-200">{option.price}</span></span><span className="mt-1 block text-xs text-zinc-400">{option.detail}</span></label>)}</div>{plan !== "collector" && <p className="mt-3 text-xs leading-5 text-amber-200">After your account is created and confirmed, we’ll take you to secure Stripe checkout for this membership.</p>}</fieldset>
-        <div><label htmlFor="username" className="mb-2 block text-sm text-zinc-300">Public username</label><input id="username" required minLength={3} maxLength={24} value={username} onChange={(e) => setUsername(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="CardCollector"/><p className="mt-2 text-xs text-zinc-500">This name appears automatically on your marketplace listings and offers.</p></div>
-        <div><label htmlFor="email" className="mb-2 block text-sm text-zinc-300">Email address</label><input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="you@example.com"/></div>
-        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-4 text-sm leading-6 text-zinc-200"><input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-violet-500"/><span>I have read and agree to the <a href="/terms" target="_blank" className="font-semibold text-amber-200 underline">Pull Theory Terms, PullShield inspection rules, trading and dispute rules, shipping and insurance responsibilities, privacy policy, and counterfeit-card policy</a>.</span></label>
-        <div><label htmlFor="password" className="mb-2 block text-sm text-zinc-300">Password</label><div className="relative"><input id="password" type={showPassword ? "text" : "password"} required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 pr-16 text-white outline-none focus:border-violet-400" placeholder="Your password"/><button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide passwords" : "Show passwords"} className="absolute inset-y-0 right-0 px-4 text-sm font-semibold text-violet-200 hover:text-white">{showPassword ? "Hide" : "Show"}</button></div></div>
-        <div><label htmlFor="confirm-password" className="mb-2 block text-sm text-zinc-300">Enter password again</label><input id="confirm-password" type={showPassword ? "text" : "password"} required minLength={6} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="Repeat your password"/></div>
-        {message && <p aria-live="polite" className="rounded-xl bg-violet-500/10 p-3 text-sm text-violet-200">{message}</p>}
-        <button type="submit" disabled={loading} className="w-full rounded-xl bg-violet-600 px-4 py-3 font-semibold text-white transition hover:bg-violet-500 disabled:opacity-60">{loading ? "Signing up..." : plan === "collector" ? "Start collecting free" : `Continue with ${plans.find((p) => p.id === plan)?.name}`}</button>
-      </form>
-      <p className="mt-6 text-center text-sm text-zinc-400">Already have an account? <a href={loginHref} className="font-medium text-amber-300 hover:text-amber-200">Log in</a></p>
-    </div>
-    {confirmationEmail && <div aria-labelledby="confirm-email-title" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-6 py-8 backdrop-blur-sm" role="dialog"><div className="w-full max-w-md rounded-3xl border border-violet-400/40 bg-zinc-950 p-7 text-center shadow-2xl"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-400/10 text-2xl text-emerald-200">✓</div><p className="mt-5 text-xs font-bold uppercase tracking-[0.22em] text-violet-300">Account next steps</p><h2 id="confirm-email-title" className="mt-2 text-3xl font-semibold">Check your email or sign in</h2><p className="mt-4 text-sm leading-6 text-zinc-300">If <span className="font-semibold text-white">{confirmationEmail}</span> is new to Pull Theory, we sent it a confirmation link.</p><div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-left text-sm leading-6 text-zinc-300"><p>If an account already exists with this email, no new account was created. Log in or reset your password.</p><p className="mt-3">For privacy, Pull Theory shows the same next steps in both cases.</p></div><p className="mt-4 text-xs leading-5 text-zinc-500">For a new account, check your spam or junk folder if the confirmation email does not arrive.</p><a href={loginHref} className="mt-6 block w-full rounded-xl bg-violet-600 px-4 py-3 font-semibold text-white">Continue to login</a></div></div>}
-  </main>;
+  const [email, setEmail] = useState(""); const [username, setUsername] = useState(""); const [password, setPassword] = useState(""); const [confirmPassword, setConfirmPassword] = useState(""); const [showPassword, setShowPassword] = useState(false); const [message, setMessage] = useState(""); const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null); const [loading, setLoading] = useState(false); const [plan, setPlan] = useState<PlanId>("collector"); const [termsAccepted, setTermsAccepted] = useState(false); const [checkingAccount, setCheckingAccount] = useState(true); const [returnTo, setReturnTo] = useState("/marketplace/browse");
+  useEffect(() => { const params = new URLSearchParams(window.location.search); const requestedPlan = params.get("plan"); const requestedReturn = params.get("returnTo"); const validPlan = plans.some((option) => option.id === requestedPlan) ? requestedPlan as PlanId : "collector"; const defaultReturn = validPlan === "collector" ? "/marketplace/browse" : `/pricing?checkout=${validPlan}`; const safeReturn = requestedReturn?.startsWith("/") && !requestedReturn.startsWith("//") ? requestedReturn : defaultReturn; setPlan(validPlan); setReturnTo(safeReturn); async function checkAccount() { const supabase = getSupabaseClient(); const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } }; if (data.session?.user) { router.replace(safeReturn); return; } setCheckingAccount(false); void recordTrafficEvent("signup_opened"); } void checkAccount(); }, [router]);
+  async function handleSignup(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setLoading(true); setMessage(""); setConfirmationEmail(null); if (!termsAccepted) { setMessage("You must accept the Pull Theory Terms and PullShield Rules before creating an account."); setLoading(false); return; } const normalizedUsername = username.trim(); if (!/^[a-zA-Z0-9_-]{3,24}$/.test(normalizedUsername)) { setMessage("Choose a username with 3–24 letters, numbers, hyphens, or underscores."); setLoading(false); return; } if (password !== confirmPassword) { setMessage("Passwords do not match. Enter the same password twice."); setLoading(false); return; } void recordTrafficEvent("signup_submitted"); try { const response = await fetch("/api/auth/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, confirmPassword, username: normalizedUsername, plan, termsAccepted }) }); const result = await response.json().catch(() => ({})); if (!response.ok) setMessage(result?.error || "We couldn't create your account right now. Please try again."); else { setConfirmationEmail(email.trim()); void recordTrafficEvent(result?.existing ? "signup_existing_account" : "confirmation_sent"); } } catch { setMessage("We couldn't reach the signup service. Please try again."); } setLoading(false); }
+  if (checkingAccount) return <main className="min-h-screen bg-black" />; const loginHref = `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  return <main className="min-h-screen bg-black px-6 py-12 text-white"><div className="mx-auto max-w-md rounded-3xl border border-violet-500/30 bg-white/5 p-8 shadow-2xl shadow-violet-950/40 backdrop-blur"><a href="/" className="text-sm font-bold uppercase tracking-[0.2em] text-violet-300">Pull Theory HQ</a><h1 className="mt-8 text-3xl font-semibold">Create your account.</h1><p className="mt-2 text-zinc-400">Choose your membership, then start buying, selling, trading, and collecting with confidence.</p><p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/[0.07] p-3 text-xs font-semibold leading-5 text-amber-200">Launch bonus: paid plans currently include extra PullShield authentications.</p><form onSubmit={handleSignup} className="mt-8 space-y-5"><fieldset><legend className="mb-3 block text-sm text-zinc-300">Choose your membership</legend><div className="grid gap-2 sm:grid-cols-2">{plans.map((option) => <label key={option.id} className={`cursor-pointer rounded-2xl border p-3 transition ${plan === option.id ? "border-violet-400 bg-violet-500/15" : "border-white/10 bg-black/25 hover:border-white/25"}`}><input type="radio" name="plan" value={option.id} checked={plan === option.id} onChange={() => { setPlan(option.id); setReturnTo(option.id === "collector" ? "/marketplace/browse" : `/pricing?checkout=${option.id}`); }} className="sr-only"/><span className="block text-sm font-semibold text-white">{option.name} <span className="text-violet-200">{option.price}</span></span><span className="mt-1 block text-xs text-zinc-400">{option.detail}</span></label>)}</div>{plan !== "collector" && <p className="mt-3 text-xs leading-5 text-amber-200">After your account is created and confirmed, we’ll take you to secure Stripe checkout for this membership.</p>}</fieldset><div><label htmlFor="username" className="mb-2 block text-sm text-zinc-300">Public username</label><input id="username" required minLength={3} maxLength={24} value={username} onChange={(e) => setUsername(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="CardCollector"/><p className="mt-2 text-xs text-zinc-500">This name appears automatically on your marketplace listings and offers.</p></div><div><label htmlFor="email" className="mb-2 block text-sm text-zinc-300">Email address</label><input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="you@example.com"/></div><label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-4 text-sm leading-6 text-zinc-200"><input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-violet-500"/><span>I have read and agree to the <a href="/terms" target="_blank" className="font-semibold text-amber-200 underline">Pull Theory Terms, PullShield inspection rules, trading and dispute rules, shipping and insurance responsibilities, privacy policy, and counterfeit-card policy</a>.</span></label><div><label htmlFor="password" className="mb-2 block text-sm text-zinc-300">Password</label><div className="relative"><input id="password" type={showPassword ? "text" : "password"} required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 pr-16 text-white outline-none focus:border-violet-400" placeholder="Your password"/><button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute inset-y-0 right-0 px-4 text-sm font-semibold text-violet-200">{showPassword ? "Hide" : "Show"}</button></div></div><div><label htmlFor="confirm-password" className="mb-2 block text-sm text-zinc-300">Enter password again</label><input id="confirm-password" type={showPassword ? "text" : "password"} required minLength={6} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="Repeat your password"/></div>{message && <p className="rounded-xl bg-violet-500/10 p-3 text-sm text-violet-200">{message}</p>}<button type="submit" disabled={loading} className="w-full rounded-xl bg-violet-600 px-4 py-3 font-semibold text-white disabled:opacity-60">{loading ? "Signing up..." : plan === "collector" ? "Start collecting free" : `Continue with ${plans.find((p) => p.id === plan)?.name}`}</button></form><p className="mt-6 text-center text-sm text-zinc-400">Already have an account? <a href={loginHref} className="font-medium text-amber-300">Log in</a></p></div>{confirmationEmail && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-6"><div className="w-full max-w-md rounded-3xl border border-violet-400/40 bg-zinc-950 p-7 text-center"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-400/10 text-2xl text-emerald-200">✓</div><h2 className="mt-5 text-3xl font-semibold">Check your email or sign in</h2><p className="mt-4 text-sm leading-6 text-zinc-300">If <span className="font-semibold text-white">{confirmationEmail}</span> is new to Pull Theory, we sent it a confirmation link.</p><p className="mt-4 text-xs text-zinc-500">Check spam or junk if it does not arrive.</p><a href={loginHref} className="mt-6 block w-full rounded-xl bg-violet-600 px-4 py-3 font-semibold text-white">Continue to login</a></div></div>}</main>;
 }
