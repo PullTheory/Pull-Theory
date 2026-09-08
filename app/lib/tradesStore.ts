@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { recordLifecycleEvent } from './trafficStore';
+import { decodeCardDetails, encodeCardDetails, type CardFinish } from './cardDetails';
 
 export type Trade = {
   id: number;
@@ -178,6 +179,7 @@ export async function updateListingDetails(
   ownerUserId: string,
   listingType: "trade" | "sell" | "trade_or_sell",
   salePriceCents: number | null,
+  finish: CardFinish,
 ) {
   const listing = await getTrade(listingId);
   if (!listing || !listing.is_listing || String(listing.user_id) !== String(ownerUserId) || listing.status !== "pending") {
@@ -186,10 +188,11 @@ export async function updateListingDetails(
 
   const desiredCard = listingType === "sell" ? "For sale" : "Open to offers";
   const normalizedPrice = listingType === "trade" ? null : salePriceCents;
+  const notes = encodeCardDetails({ ...decodeCardDetails(listing.notes), finish });
   if (supabase) {
     const { data, error } = await supabase
       .from("trades")
-      .update({ listing_type: listingType, sale_price_cents: normalizedPrice, desired_card: desiredCard })
+      .update({ listing_type: listingType, sale_price_cents: normalizedPrice, desired_card: desiredCard, notes })
       .eq("id", listingId)
       .eq("user_id", ownerUserId)
       .eq("is_listing", true)
@@ -203,6 +206,7 @@ export async function updateListingDetails(
   listing.listingType = listingType;
   listing.salePriceCents = normalizedPrice;
   listing.desiredCard = desiredCard;
+  listing.notes = notes;
   return listing;
 }
 

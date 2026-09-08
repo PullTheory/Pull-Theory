@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import OfferModal from "../../components/OfferModal";
 import { getSupabaseClient } from "../../lib/supabase";
-import { decodeCardDetails } from "../../lib/cardDetails";
+import { cardFinishLabel, decodeCardDetails } from "../../lib/cardDetails";
 import BuyNowButton from "../../components/BuyNowButton";
 
 type Listing = {
@@ -354,6 +354,13 @@ export default function BrowseMarketplacePage() {
                   )}
 
                   <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                    {details.finish && (
+                      <Detail
+                        label="Finish"
+                        value={cardFinishLabel(details.finish)!}
+                      />
+                    )}
+
                     {details.condition && (
                       <Detail
                         label="Condition"

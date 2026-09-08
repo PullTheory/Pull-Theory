@@ -1,3 +1,5 @@
+export type CardFinish = "holo" | "reverse_holo";
+
 export type CardDetails = {
   setName?: string;
   cardNumber?: string;
@@ -8,6 +10,7 @@ export type CardDetails = {
   condition?: string;
   estimatedValue?: string;
   collectorNotes?: string;
+  finish?: CardFinish;
 };
 
 const PREFIX = "PT_CARD_DETAILS:";
@@ -33,4 +36,8 @@ export function formatCardTitle(name: string, details: CardDetails) {
     .filter(Boolean)
     .join(" · ");
   return suffix ? `${name.trim()} — ${suffix}` : name.trim();
+}
+
+export function cardFinishLabel(finish?: CardFinish) {
+  return finish === "holo" ? "Holo" : finish === "reverse_holo" ? "Reverse Holo" : undefined;
 }

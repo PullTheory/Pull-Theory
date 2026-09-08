@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { getCurrentAccessToken, getSupabaseClient } from "../../lib/supabase";
 import { uploadTradePhotos } from "../../lib/tradePhotos";
-import { encodeCardDetails, formatCardTitle, type CardDetails } from "../../lib/cardDetails";
+import { cardFinishLabel, encodeCardDetails, formatCardTitle, type CardDetails, type CardFinish } from "../../lib/cardDetails";
 import CameraCapture from "../../components/CameraCapture";
 
 type CardSuggestion = {
@@ -162,6 +162,7 @@ export default function MarketplaceListingPage() {
     setMessage("");
     try {
       if (!selectedCard) throw new Error("Select the exact card first.");
+      if (!details.finish) throw new Error("Choose whether your card is Holo or Reverse Holo.");
       if (photos.length < 2) throw new Error("Please upload a front and back photo of your card.");
       const salePriceCents = listingType === "trade" ? null : Math.round(Number(salePrice) * 100);
       if (listingType !== "trade" && (salePriceCents === null || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
@@ -230,6 +231,21 @@ export default function MarketplaceListingPage() {
                 <span className="mt-2 block text-xs leading-5 text-zinc-500">The current market estimate fills automatically when available. You can change it before posting.</span>
               </label>
             )}
+
+            {selectedCard && (
+              <fieldset className="mt-6">
+                <legend className="text-sm font-semibold text-zinc-200">Card finish <span className="text-rose-300">required</span></legend>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">Choose the finish on the actual card you are listing.</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {(["holo", "reverse_holo"] as CardFinish[]).map((finish) => (
+                    <label key={finish} className={`cursor-pointer rounded-2xl border p-4 transition ${details.finish === finish ? "border-violet-300 bg-violet-500/10" : "border-white/10 bg-black/20"}`}>
+                      <input type="radio" name="card-finish" value={finish} checked={details.finish === finish} onChange={() => setDetails((current) => ({ ...current, finish }))} className="sr-only" />
+                      <span className="block font-semibold text-white">{cardFinishLabel(finish)}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
           </section>
 
           <section className="rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_65%_18%,rgba(124,58,237,0.16),transparent_35%),rgba(255,255,255,0.04)] p-6 sm:p-10">
@@ -289,7 +305,7 @@ export default function MarketplaceListingPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-200">Selected card</p>
                     <h3 className="mt-2 text-xl font-semibold">{cardName}</h3>
-                    <p className="mt-2 text-sm text-zinc-300">{[details.setName, details.cardNumber && `#${details.cardNumber}`, details.year, rarity].filter(Boolean).join(" · ")}</p>
+                    <p className="mt-2 text-sm text-zinc-300">{[details.setName, details.cardNumber && `#${details.cardNumber}`, details.year, rarity, cardFinishLabel(details.finish)].filter(Boolean).join(" · ")}</p>
                     {details.estimatedValue && <p className="mt-2 text-sm font-semibold text-emerald-200">Market estimate: {details.estimatedValue}</p>}
                     <button type="button" onClick={resetCardSearch} className="mt-4 text-sm font-semibold text-violet-200 hover:text-white">Choose a different card</button>
                   </div>
@@ -324,7 +340,7 @@ export default function MarketplaceListingPage() {
 
           <p className="px-2 text-xs leading-5 text-zinc-500">Trade offers remain card-for-card. For sales, the buyer pays Pull Theory first; you ship to PullShield for authentication before your payout is released. Your return address stays private.</p>
 
-          <button disabled={posting || !username || !selectedCard || photos.length < 2} className="sticky bottom-4 w-full rounded-2xl bg-violet-600 px-4 py-4 font-bold shadow-[0_14px_40px_rgba(124,58,237,0.35)] transition hover:bg-violet-500 disabled:opacity-60">
+          <button disabled={posting || !username || !selectedCard || !details.finish || photos.length < 2} className="sticky bottom-4 w-full rounded-2xl bg-violet-600 px-4 py-4 font-bold shadow-[0_14px_40px_rgba(124,58,237,0.35)] transition hover:bg-violet-500 disabled:opacity-60">
             {posting ? "Posting..." : "List this card"}
           </button>
         </form>

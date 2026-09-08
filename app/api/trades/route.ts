@@ -3,6 +3,7 @@ import { addTrade, counterOffer, deleteListing, getTrade, getTrades, getUserFrom
 import { getTraderBadge } from "../../lib/traderBadges";
 import { recordLifecycleEvent } from "../../lib/trafficStore";
 import { notifyMembersOfNewListing } from "../../lib/notifications";
+import { decodeCardDetails } from "../../lib/cardDetails";
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,8 @@ export async function POST(request: Request) {
       : [];
     const isListing = Boolean(body?.is_listing);
     const listingType = body?.listingType === "sell" || body?.listingType === "trade_or_sell" ? body.listingType : "trade";
+    const notes = body?.notes ? String(body.notes) : undefined;
+    const listingFinish = decodeCardDetails(notes).finish;
     const salePriceCents = body?.salePriceCents === null || body?.salePriceCents === undefined || body?.salePriceCents === ""
       ? null
       : Number(body.salePriceCents);
@@ -43,6 +46,10 @@ export async function POST(request: Request) {
 
     if (isListing && photoUrls.length < 2) {
       return NextResponse.json({ error: "Please add a front and back photo of your card before listing it." }, { status: 400 });
+    }
+
+    if (isListing && !listingFinish) {
+      return NextResponse.json({ error: "Choose whether the card is Holo or Reverse Holo." }, { status: 400 });
     }
 
     if (isListing && listingType !== "trade" && (typeof salePriceCents !== "number" || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
@@ -81,7 +88,7 @@ export async function POST(request: Request) {
       offeredCard,
       desiredCard,
       shippingAddress,
-      notes: body?.notes ? String(body.notes) : undefined,
+      notes,
       agree: true,
       is_listing: isListing,
       listing_id: listingId,
@@ -118,13 +125,17 @@ export async function PATCH(request: Request) {
       const listingId = Number(body?.listingId);
       const listingType = body?.listingType as "trade" | "sell" | "trade_or_sell";
       const salePriceCents = listingType === "trade" ? null : Number(body?.salePriceCents);
+      const finish = body?.finish as "holo" | "reverse_holo";
       if (!Number.isInteger(listingId) || listingId <= 0 || !["trade", "sell", "trade_or_sell"].includes(listingType)) {
         return NextResponse.json({ error: "Choose a valid listing type." }, { status: 400 });
       }
       if (listingType !== "trade" && (salePriceCents === null || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
         return NextResponse.json({ error: "Enter a sale price of at least $1.00." }, { status: 400 });
       }
-      const listing = await updateListingDetails(listingId, user.id, listingType, salePriceCents);
+      if (!["holo", "reverse_holo"].includes(finish)) {
+        return NextResponse.json({ error: "Choose whether the card is Holo or Reverse Holo." }, { status: 400 });
+      }
+      const listing = await updateListingDetails(listingId, user.id, listingType, salePriceCents, finish);
       if (!listing) return NextResponse.json({ error: "Listing not found, no longer active, or not owned by this account." }, { status: 404 });
       return NextResponse.json({ saved: true, listing });
     }
