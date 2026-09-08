@@ -1,15 +1,10 @@
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const FROM = process.env.MAIL_FROM || "Pull Theory <notifications@pulltheorytrade.com>";
+const FROM = "PullTheory <updates@pulltheorytrade.com>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pulltheorytrade.com";
 
 function admin() {
@@ -62,38 +57,30 @@ export async function getMarketingAudienceCount() {
 }
 
 async function sendOne(input: { userId: string; to: string; subject: string; text: string; html?: string }) {
+  if (!RESEND_API_KEY) throw new Error("Member announcements require Resend. RESEND_API_KEY is not configured.");
+
   const unsubscribeUrl = makeUnsubscribeUrl(input.userId);
   const text = `${input.text.trim()}\n\nManage marketing emails: ${unsubscribeUrl}`;
   const html = input.html ? `${input.html}<p style="margin-top:28px;font-size:12px;color:#777">Don’t want product update emails? <a href="${unsubscribeUrl}">Unsubscribe</a>.</p>` : undefined;
 
-  if (RESEND_API_KEY) {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: FROM,
-        to: [input.to],
-        subject: input.subject,
-        text,
-        ...(html ? { html } : {}),
-        headers: {
-          "List-Unsubscribe": `<${unsubscribeUrl}>`,
-          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-          "X-Entity-Ref-ID": crypto.randomUUID(),
-        },
-      }),
-    });
-    if (!response.ok) throw new Error(`Email delivery failed: ${await response.text()}`);
-    return true;
-  }
-
-  if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
-    const transporter = nodemailer.createTransport({ host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT === 465, auth: { user: SMTP_USER, pass: SMTP_PASS } });
-    await transporter.sendMail({ from: FROM, to: input.to, subject: input.subject, text, html, headers: { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } });
-    return true;
-  }
-
-  throw new Error("Email delivery is not configured.");
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: FROM,
+      to: [input.to],
+      subject: input.subject,
+      text,
+      ...(html ? { html } : {}),
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        "X-Entity-Ref-ID": crypto.randomUUID(),
+      },
+    }),
+  });
+  if (!response.ok) throw new Error(`Email delivery failed: ${await response.text()}`);
+  return true;
 }
 
 export async function sendMemberAnnouncement(input: { subject: string; text: string; html?: string }) {
