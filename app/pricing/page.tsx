@@ -144,7 +144,7 @@ export default function PricingPage() {
               ) : (
                 <a
                   href={plan.href}
-                  className="mt-8 block rounded-2xl border border-white/15 px-4 py-3 text-center text-sm font-semibold transition hover:border-violet-300/60 hover:bg-white/[0.06]"
+                  className="mt-8 block rounded-2xl bg-violet-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-violet-400"
                 >
                   {plan.action}
                 </a>
