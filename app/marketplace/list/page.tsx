@@ -108,7 +108,7 @@ export default function MarketplaceListingPage() {
         if (!response.ok) throw new Error(data.error || "Unable to search for cards.");
         const cards = (data.cards ?? []) as CardSuggestion[];
         setSuggestions(cards.slice(0, 50));
-        if (cards.length === 0) setMessage("No cards match that search. Try a different name or card number.");
+        if (cards.length === 0) setMessage("No cards match that query. Try a different name, set, or card number.");
       } catch (error) {
         setSuggestions([]);
         setMessage(error instanceof Error ? error.message : "Unable to search for cards.");
@@ -151,14 +151,9 @@ export default function MarketplaceListingPage() {
   }
 
   function addPhotos(files: File[]) {
-    const selected = files
-      .filter((file) => file.type.startsWith("image/"))
-      .slice(0, Math.max(0, 6 - photos.length));
+    const selected = files.filter((file) => file.type.startsWith("image/")).slice(0, Math.max(0, 6 - photos.length));
     setPhotos((current) => [...current, ...selected].slice(0, 6));
-    setPhotoPreviews((current) => [
-      ...current,
-      ...selected.map((file) => URL.createObjectURL(file)),
-    ].slice(0, 6));
+    setPhotoPreviews((current) => [...current, ...selected.map((file) => URL.createObjectURL(file))].slice(0, 6));
   }
 
   async function postListing(event: FormEvent<HTMLFormElement>) {
@@ -199,7 +194,7 @@ export default function MarketplaceListingPage() {
     }
   }
 
-  const inputClass = "mt-2 w-full rounded-3xl border border-white/10 bg-black/45 px-5 py-4 text-lg text-white outline-none placeholder:text-zinc-600 focus:border-violet-400";
+  const inputClass = "mt-3 w-full rounded-[2rem] border border-white/10 bg-black/45 px-5 py-5 text-lg text-white outline-none placeholder:text-zinc-600 focus:border-violet-400";
 
   return (
     <main className="min-h-screen bg-[#050506]/70 px-4 py-8 text-white sm:px-6 sm:py-12">
@@ -207,12 +202,6 @@ export default function MarketplaceListingPage() {
         <Link href="/marketplace/browse" className="text-sm font-semibold text-violet-300">← Back to marketplace</Link>
 
         <form onSubmit={postListing} className="mt-5 space-y-6">
-          <section className="rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_70%_15%,rgba(124,58,237,0.22),transparent_35%),rgba(255,255,255,0.04)] p-6 sm:p-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-amber-300">Create listing</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">List a Pokémon card</h1>
-            <p className="mt-4 max-w-2xl text-zinc-400">Find the exact card by name and card number, then Pull Theory fills in the official card details and market price.</p>
-          </section>
-
           <section className="rounded-[2.25rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">Listing as</p>
             <p className="mt-2 text-lg font-semibold">{username || "Loading your profile..."}</p>
@@ -243,30 +232,34 @@ export default function MarketplaceListingPage() {
             )}
           </section>
 
-          <section className="rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_55%_15%,rgba(234,179,8,0.09),transparent_28%),rgba(255,255,255,0.04)] p-6 sm:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-amber-300">Card database</p>
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Find the exact card</h2>
-            <p className="mt-3 text-zinc-400">Search by name, card number, or both. More matching cards will appear below.</p>
+          <section className="rounded-[2.25rem] border border-white/10 bg-[radial-gradient(circle_at_65%_18%,rgba(124,58,237,0.16),transparent_35%),rgba(255,255,255,0.04)] p-6 sm:p-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-amber-300">Pokémon card database</p>
+            <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Find the exact Pokémon card</h1>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-zinc-400">Find the exact Pokémon card by name and card number, then add it to your sale or trade listing.</p>
 
             {!selectedCard ? (
               <>
-                <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                  <label className="block text-sm text-zinc-300">
+                <div className="mt-8 space-y-7">
+                  <label className="block text-lg text-zinc-300">
                     Card name
                     <input value={cardName} onChange={(event) => setCardName(event.target.value)} placeholder="Example: Mimikyu ex" className={inputClass} />
                   </label>
-                  <label className="block text-sm text-zinc-300">
+                  <label className="block text-lg text-zinc-300">
                     Card #
                     <input value={cardNumberSearch} onChange={(event) => setCardNumberSearch(event.target.value)} placeholder="e.g. 075" className={inputClass} />
                   </label>
                 </div>
 
-                {searching && <p className="mt-6 text-center text-sm text-violet-200">Searching the card database...</p>}
+                {searching && <p className="mt-7 text-center text-sm text-violet-200">Searching the card database...</p>}
+
+                {message && !searching && suggestions.length === 0 && (
+                  <div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.035] px-6 py-10 text-center text-lg leading-8 text-zinc-300">{message}</div>
+                )}
 
                 {suggestions.length > 0 && (
-                  <div className="mt-6">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-white">Matching cards</p>
+                  <div className="mt-8">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <p className="text-base font-semibold text-white">Matching cards</p>
                       <p className="text-xs text-zinc-500">Showing {suggestions.length} results</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -290,7 +283,7 @@ export default function MarketplaceListingPage() {
                 )}
               </>
             ) : (
-              <div className="mt-6 rounded-3xl border border-violet-300/30 bg-violet-500/[0.08] p-5">
+              <div className="mt-8 rounded-3xl border border-violet-300/30 bg-violet-500/[0.08] p-5">
                 <div className="flex gap-4">
                   {cardImage && <img src={cardImage} alt="" className="h-36 w-24 rounded-xl border border-white/10 object-contain" />}
                   <div className="min-w-0 flex-1">
@@ -303,8 +296,6 @@ export default function MarketplaceListingPage() {
                 </div>
               </div>
             )}
-
-            {message && <p className="mt-5 rounded-2xl bg-rose-400/10 p-4 text-sm text-rose-200">{message}</p>}
           </section>
 
           <section className="rounded-[2.25rem] border border-dashed border-violet-400/35 bg-violet-500/[0.06] p-6 sm:p-8">
