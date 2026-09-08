@@ -3,6 +3,7 @@ import { getTrade, getTrades, getUserFromToken, updateShipmentStatus } from "../
 import { sendNotification } from "../../lib/notifications";
 import { getLifecycleSummary, getSignupSummary, getTrafficSummary } from "../../lib/trafficStore";
 import { isPullTheoryOperator } from "../../lib/operator";
+import { getAllSaleOrders } from "../../lib/salesStore";
 
 const allowedStatuses = ["awaiting_shipment", "received", "authenticated", "return_shipped", "completed", "cancelled"] as const;
 type ShipmentStatus = (typeof allowedStatuses)[number];
@@ -34,11 +35,14 @@ export async function GET(request: Request) {
       .map((offer) => ({ offer, listing: listingById.get(offer.listing_id!) }))
       .filter((shipment) => shipment.listing);
 
-    const trafficResult = await Promise.allSettled([getTrafficSummary(), getSignupSummary(), getLifecycleSummary()]);
+    const [sales, trafficResult] = await Promise.all([
+      getAllSaleOrders(),
+      Promise.allSettled([getTrafficSummary(), getSignupSummary(), getLifecycleSummary()]),
+    ]);
     const traffic = trafficResult[0].status === "fulfilled" ? trafficResult[0].value : null;
     const signups = trafficResult[1].status === "fulfilled" ? trafficResult[1].value : null;
     const lifecycle = trafficResult[2].status === "fulfilled" ? trafficResult[2].value : null;
-    return NextResponse.json({ shipments, traffic, signups, lifecycle });
+    return NextResponse.json({ shipments, sales, traffic, signups, lifecycle });
   } catch (error) {
     console.error("[api/pullshield] unable to load shipments", error);
     return NextResponse.json({ error: "Unable to load PullShield shipments." }, { status: 500 });

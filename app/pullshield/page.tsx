@@ -26,6 +26,7 @@ type Traffic = {
 };
 type SignupSummary = { today: number; week: number; allTime: number };
 type LifecycleStep = { id: string; label: string; members: number };
+type Sale = { id: number; orderStatus: string; paymentStatus: string; authenticationStatus: string; itemAmountCents: number; sellerPayoutCents: number; sellerTrackingNumber?: string | null; buyerTrackingNumber?: string | null };
 const steps = [
   ["awaiting_shipment", "Awaiting shipment"],
   ["received", "Cards received"],
@@ -36,6 +37,7 @@ const steps = [
 
 export default function PullShieldDeskPage() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [traffic, setTraffic] = useState<Traffic | null>(null);
   const [signups, setSignups] = useState<SignupSummary | null>(null);
   const [lifecycle, setLifecycle] = useState<LifecycleStep[] | null>(null);
@@ -66,6 +68,7 @@ export default function PullShieldDeskPage() {
       if (!response.ok)
         throw new Error(data.error ?? "Unable to open PullShield Desk.");
       setShipments(data.shipments ?? []);
+      setSales(data.sales ?? []);
       setTraffic(data.traffic ?? null);
       setSignups(data.signups ?? null);
       setLifecycle(data.lifecycle ?? null);
@@ -119,6 +122,23 @@ export default function PullShieldDeskPage() {
     } finally {
       setSaving(null);
     }
+  }
+
+  async function updateSale(sale: Sale, status: string) {
+    setSaving(-sale.id); setMessage("");
+    try {
+      const token = await getCurrentAccessToken();
+      if (!token) throw new Error("Please sign in to update this sale.");
+      const trackingNumber = status === "shipped_to_buyer" ? window.prompt("Enter the buyer shipment tracking number.")?.trim() : undefined;
+      const reason = ["authentication_failed", "refunded_disputed"].includes(status) ? window.prompt("Add a reason for this result.")?.trim() : undefined;
+      if (status === "shipped_to_buyer" && !trackingNumber) return;
+      const response = await fetch(`/api/sales/${sale.id}/status`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ status, trackingNumber, reason }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Unable to update sale.");
+      setMessage("Sale updated. Payouts release only after authentication passes.");
+      await load();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to update sale."); }
+    finally { setSaving(null); }
   }
 
   const queues = [
@@ -279,6 +299,7 @@ export default function PullShieldDeskPage() {
             </div>
           )}
         </section>
+        <section className="mt-10"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Marketplace sales</p><h2 className="mt-2 text-3xl font-semibold">Verify sales and release payouts</h2></div><p className="max-w-sm text-right text-sm text-zinc-400">A buyer payment is held by Pull Theory. Release the seller payout only after the card passes authentication.</p></div><div className="mt-6 grid gap-5 lg:grid-cols-2">{sales.length ? sales.map((sale) => { const next = sale.orderStatus === "waiting_for_seller_shipment" ? ["received_by_pulltheory", "Mark card received"] : sale.orderStatus === "received_by_pulltheory" ? ["authentication_in_progress", "Start authentication"] : sale.orderStatus === "authentication_in_progress" ? ["authentication_passed", "Pass authentication + release payout"] : sale.orderStatus === "authentication_passed" ? ["shipped_to_buyer", "Ship to buyer"] : sale.orderStatus === "shipped_to_buyer" ? ["completed", "Mark completed"] : null; return <article key={sale.id} className="rounded-3xl border border-emerald-300/20 bg-emerald-400/[0.05] p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">Sale #{sale.id}</p><p className="mt-2 text-xl font-semibold">{(sale.itemAmountCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</p></div><span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold capitalize">{sale.orderStatus.replaceAll("_", " ")}</span></div><div className="mt-5 grid grid-cols-2 gap-3 text-sm"><div><p className="text-zinc-500">Authentication</p><p className="mt-1 capitalize">{sale.authenticationStatus.replaceAll("_", " ")}</p></div><div><p className="text-zinc-500">Seller payout</p><p className="mt-1 font-semibold text-emerald-200">{(sale.sellerPayoutCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</p></div></div>{sale.sellerTrackingNumber && <p className="mt-4 text-sm text-zinc-300">Seller tracking: {sale.sellerTrackingNumber}</p>}{sale.buyerTrackingNumber && <p className="mt-2 text-sm text-zinc-300">Buyer tracking: {sale.buyerTrackingNumber}</p>}<div className="mt-5 flex flex-wrap gap-3">{next && <button disabled={saving === -sale.id} onClick={() => void updateSale(sale, next[0])} className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-black disabled:opacity-50">{saving === -sale.id ? "Saving..." : next[1]}</button>}{!["completed", "refunded_disputed", "authentication_failed"].includes(sale.orderStatus) && <button disabled={saving === -sale.id} onClick={() => void updateSale(sale, "authentication_failed")} className="rounded-xl border border-rose-300/40 px-4 py-2 text-sm font-semibold text-rose-100">Fail / refund</button>}</div></article>; }) : <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center text-zinc-400">No card sales are awaiting PullShield yet.</div>}</div></section>
         <section className="mt-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
