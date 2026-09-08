@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addTrade, counterOffer, deleteListing, getTrade, getTrades, getUserFromToken, updateShippingAddress } from "../../lib/tradesStore";
+import { addTrade, counterOffer, deleteListing, getTrade, getTrades, getUserFromToken, updateListingDetails, updateShippingAddress } from "../../lib/tradesStore";
 import { getTraderBadge } from "../../lib/traderBadges";
 import { recordLifecycleEvent } from "../../lib/trafficStore";
 import { notifyMembersOfNewListing } from "../../lib/notifications";
@@ -111,8 +111,24 @@ export async function PATCH(request: Request) {
     const authorization = request.headers.get("authorization") ?? "";
     const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
     const user = await getUserFromToken(token);
-    if (!user) return NextResponse.json({ error: "Please sign in to save your return address." }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "Please sign in to update this trade or listing." }, { status: 401 });
     const body = await request.json();
+
+    if (body?.action === "update_listing") {
+      const listingId = Number(body?.listingId);
+      const listingType = body?.listingType as "trade" | "sell" | "trade_or_sell";
+      const salePriceCents = listingType === "trade" ? null : Number(body?.salePriceCents);
+      if (!Number.isInteger(listingId) || listingId <= 0 || !["trade", "sell", "trade_or_sell"].includes(listingType)) {
+        return NextResponse.json({ error: "Choose a valid listing type." }, { status: 400 });
+      }
+      if (listingType !== "trade" && (salePriceCents === null || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
+        return NextResponse.json({ error: "Enter a sale price of at least $1.00." }, { status: 400 });
+      }
+      const listing = await updateListingDetails(listingId, user.id, listingType, salePriceCents);
+      if (!listing) return NextResponse.json({ error: "Listing not found, no longer active, or not owned by this account." }, { status: 404 });
+      return NextResponse.json({ saved: true, listing });
+    }
+
     const tradeId = Number(body?.tradeId);
     const shippingAddress = String(body?.shippingAddress ?? "").trim();
     if (!Number.isInteger(tradeId) || tradeId <= 0 || shippingAddress.length < 10) {

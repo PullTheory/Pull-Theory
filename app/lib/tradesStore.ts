@@ -173,6 +173,39 @@ export async function updateShippingAddress(tradeId: number, userId: string, shi
   return trade;
 }
 
+export async function updateListingDetails(
+  listingId: number,
+  ownerUserId: string,
+  listingType: "trade" | "sell" | "trade_or_sell",
+  salePriceCents: number | null,
+) {
+  const listing = await getTrade(listingId);
+  if (!listing || !listing.is_listing || String(listing.user_id) !== String(ownerUserId) || listing.status !== "pending") {
+    return null;
+  }
+
+  const desiredCard = listingType === "sell" ? "For sale" : "Open to offers";
+  const normalizedPrice = listingType === "trade" ? null : salePriceCents;
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("trades")
+      .update({ listing_type: listingType, sale_price_cents: normalizedPrice, desired_card: desiredCard })
+      .eq("id", listingId)
+      .eq("user_id", ownerUserId)
+      .eq("is_listing", true)
+      .eq("status", "pending")
+      .select("*")
+      .maybeSingle();
+    if (error) throw error;
+    return data ? normalizeRow(data) : null;
+  }
+
+  listing.listingType = listingType;
+  listing.salePriceCents = normalizedPrice;
+  listing.desiredCard = desiredCard;
+  return listing;
+}
+
 export async function acceptTrade(id: number, email: string) {
   if (supabase) {
     const t = await getTrade(id);

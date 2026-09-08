@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
+    const confirmPassword = String(body?.confirmPassword || "");
     const username = String(body?.username || "").trim();
     const plan = String(body?.plan || "collector");
     const termsAccepted = body?.termsAccepted === true;
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
     if (!termsAccepted) return NextResponse.json({ error: "You must accept the Pull Theory Terms and PullShield Rules before creating an account." }, { status: 400 });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
     if (password.length < 6) return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+    if (password !== confirmPassword) return NextResponse.json({ error: "Passwords do not match. Enter the same password twice." }, { status: 400 });
     if (!/^[a-zA-Z0-9_-]{3,24}$/.test(username)) return NextResponse.json({ error: "Choose a username with 3–24 letters, numbers, hyphens, or underscores." }, { status: 400 });
     if (!VALID_PLANS.has(plan)) return NextResponse.json({ error: "Choose a valid membership plan." }, { status: 400 });
     if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {

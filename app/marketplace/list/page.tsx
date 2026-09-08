@@ -164,7 +164,7 @@ export default function MarketplaceListingPage() {
       if (!selectedCard) throw new Error("Select the exact card first.");
       if (photos.length < 2) throw new Error("Please upload a front and back photo of your card.");
       const salePriceCents = listingType === "trade" ? null : Math.round(Number(salePrice) * 100);
-      if (listingType !== "trade" && (!Number.isInteger(salePriceCents) || salePriceCents < 100)) {
+      if (listingType !== "trade" && (salePriceCents === null || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
         throw new Error("Enter a sale price of at least $1.00.");
       }
       const token = await getCurrentAccessToken();

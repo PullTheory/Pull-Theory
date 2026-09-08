@@ -392,7 +392,7 @@ export default function BrowseMarketplacePage() {
                     {ownListing ? (
                       <div className="grid grid-cols-2 gap-3">
                         <Link
-                          href={`/marketplace/${listing.id}`}
+                          href={`/marketplace/${listing.id}/edit`}
                           className="rounded-2xl border border-violet-400/40 px-4 py-3 text-center text-sm font-semibold text-violet-200"
                         >
                           Manage
