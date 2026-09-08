@@ -38,12 +38,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const body = await request.json();
     const listingType: ListingType = body?.listingType === "sell" || body?.listingType === "trade_or_sell" ? body.listingType : "trade";
     const salePriceCents = listingType === "trade" ? null : Number(body?.salePriceCents);
-    if (listingType !== "trade" && (!Number.isInteger(salePriceCents) || salePriceCents < 100)) {
+    if (listingType !== "trade" && (salePriceCents === null || !Number.isInteger(salePriceCents) || salePriceCents < 100)) {
       return NextResponse.json({ error: "Enter a sale price of at least $1.00." }, { status: 400 });
     }
 
     const existingDetails = decodeCardDetails(listing.notes);
-    const gradingStatus = body?.gradingStatus === "graded" ? "graded" : "raw";
+    const gradingStatus: "graded" | "raw" = body?.gradingStatus === "graded" ? "graded" : "raw";
     const gradingCompany = gradingStatus === "graded" ? String(body?.gradingCompany ?? "").trim().slice(0, 30) : "";
     const grade = gradingStatus === "graded" ? String(body?.grade ?? "").trim().slice(0, 12) : "";
 
