@@ -14,14 +14,6 @@ const plans = [
 
 type PlanId = (typeof plans)[number]["id"];
 
-const EXISTING_ACCOUNT_MESSAGE = "An account already exists with this email. Log in or reset your password.";
-
-function isExistingAccountError(error: { code?: string; message: string }) {
-  return error.code === "user_already_exists"
-    || error.code === "email_exists"
-    || /already registered/i.test(error.message);
-}
-
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -60,13 +52,19 @@ export default function SignupPage() {
     if (!termsAccepted) { setMessage("You must accept the Pull Theory Terms and PullShield Rules before creating an account."); setLoading(false); return; }
     const normalizedUsername = username.trim();
     if (!/^[a-zA-Z0-9_-]{3,24}$/.test(normalizedUsername)) { setMessage("Choose a username with 3–24 letters, numbers, hyphens, or underscores."); setLoading(false); return; }
-    const supabase = getSupabaseClient();
-    if (!supabase) { setMessage("Supabase client not available."); setLoading(false); return; }
     void recordTrafficEvent("signup_submitted");
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { username: normalizedUsername, membership_plan: plan, terms_accepted: true, terms_accepted_at: new Date().toISOString(), terms_version: "2026-08-30" } } });
-    if (error) setMessage(isExistingAccountError(error) ? EXISTING_ACCOUNT_MESSAGE : error.message);
-    else if (data?.session?.user) router.replace(returnTo);
-    else { setConfirmationEmail(email.trim()); void recordTrafficEvent("confirmation_sent"); }
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, username: normalizedUsername, plan, termsAccepted }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) setMessage(result?.error || "We couldn't create your account right now. Please try again.");
+      else { setConfirmationEmail(email.trim()); void recordTrafficEvent(result?.existing ? "signup_existing_account" : "confirmation_sent"); }
+    } catch {
+      setMessage("We couldn't reach the signup service. Please try again.");
+    }
     setLoading(false);
   }
 
@@ -83,7 +81,7 @@ export default function SignupPage() {
         <div><label htmlFor="username" className="mb-2 block text-sm text-zinc-300">Public username</label><input id="username" required minLength={3} maxLength={24} value={username} onChange={(e) => setUsername(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="CardCollector"/><p className="mt-2 text-xs text-zinc-500">This name appears automatically on your marketplace listings and offers.</p></div>
         <div><label htmlFor="email" className="mb-2 block text-sm text-zinc-300">Email address</label><input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="you@example.com"/></div>
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-4 text-sm leading-6 text-zinc-200"><input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-violet-500"/><span>I have read and agree to the <a href="/terms" target="_blank" className="font-semibold text-amber-200 underline">Pull Theory Terms, PullShield inspection rules, trading and dispute rules, shipping and insurance responsibilities, privacy policy, and counterfeit-card policy</a>.</span></label>
-        <div><label htmlFor="password" className="mb-2 block text-sm text-zinc-300">Password</label><input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="Your password"/></div>
+        <div><label htmlFor="password" className="mb-2 block text-sm text-zinc-300">Password</label><input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-violet-400" placeholder="Your password"/></div>
         {message && <p aria-live="polite" className="rounded-xl bg-violet-500/10 p-3 text-sm text-violet-200">{message}</p>}
         <button type="submit" disabled={loading} className="w-full rounded-xl bg-violet-600 px-4 py-3 font-semibold text-white transition hover:bg-violet-500 disabled:opacity-60">{loading ? "Signing up..." : plan === "collector" ? "Start collecting free" : `Continue with ${plans.find((p) => p.id === plan)?.name}`}</button>
       </form>
