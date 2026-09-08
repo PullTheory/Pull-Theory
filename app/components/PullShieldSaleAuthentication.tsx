@@ -3,15 +3,7 @@
 import { useState } from "react";
 import { getSupabaseClient } from "../lib/supabase";
 
-type Props = {
-  saleId: number;
-  initialChecklist?: Record<string, boolean>;
-  initialEvidence?: string[];
-  initialNotes?: string | null;
-  disabled?: boolean;
-  onApprove: (payload: { authenticationChecklist: Record<string, boolean>; authenticationEvidenceUrls: string[]; authenticationNotes: string }) => Promise<void>;
-};
-
+type Props = { saleId: number; initialChecklist?: Record<string, boolean>; initialEvidence?: string[]; initialNotes?: string | null; disabled?: boolean; onApprove: (payload: { authenticationChecklist: Record<string, boolean>; authenticationEvidenceUrls: string[]; authenticationNotes: string }) => Promise<void> };
 const checks = [
   ["card_identity", "Card identity", "Match card number, set, year, rarity, artwork, language and expected variant."],
   ["print_quality", "Print quality", "Check fonts, borders, colors, symbols, copyright text and print sharpness."],
@@ -50,22 +42,14 @@ export default function PullShieldSaleAuthentication({ saleId, initialChecklist 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const complete = checks.every(([key]) => checklist[key]) && evidence.length >= 2;
-
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
     setBusy(true); setError("");
-    try { setEvidence((current) => [...current, ...(await uploadEvidence(saleId, Array.from(files)))].slice(0, 12)); }
+    try { const uploaded = await uploadEvidence(saleId, Array.from(files)); setEvidence((current) => [...current, ...uploaded].slice(0, 12)); }
     catch (err) { setError(err instanceof Error ? err.message : "Unable to upload evidence."); }
     finally { setBusy(false); }
   }
-
-  async function approve() {
-    setBusy(true); setError("");
-    try { await onApprove({ authenticationChecklist: checklist, authenticationEvidenceUrls: evidence, authenticationNotes: notes }); }
-    catch (err) { setError(err instanceof Error ? err.message : "Unable to approve authentication."); }
-    finally { setBusy(false); }
-  }
-
+  async function approve() { setBusy(true); setError(""); try { await onApprove({ authenticationChecklist: checklist, authenticationEvidenceUrls: evidence, authenticationNotes: notes }); } catch (err) { setError(err instanceof Error ? err.message : "Unable to approve authentication."); } finally { setBusy(false); } }
   return <div className="mt-5 rounded-2xl border border-amber-300/20 bg-black/20 p-5">
     <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-200">PullShield authentication record</p><p className="mt-2 text-sm text-zinc-400">All checks and at least two evidence photos are required before seller payout can release.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${complete ? "bg-emerald-400/15 text-emerald-200" : "bg-amber-300/10 text-amber-100"}`}>{complete ? "Ready" : `${checks.filter(([key]) => !checklist[key]).length} checks left`}</span></div>
     <div className="mt-5 space-y-2">{checks.map(([key, label, detail]) => <label key={key} className="flex cursor-pointer gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3"><input type="checkbox" checked={Boolean(checklist[key])} disabled={disabled || busy} onChange={(e) => setChecklist((current) => ({ ...current, [key]: e.target.checked }))} className="mt-1 h-4 w-4 accent-emerald-400"/><span><span className="block text-sm font-semibold text-white">{label}</span><span className="mt-1 block text-xs leading-5 text-zinc-400">{detail}</span></span></label>)}</div>
