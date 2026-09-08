@@ -1,7 +1,7 @@
 export const paidPlans = {
-  trader: { name: "Trader", credits: 2, priceEnv: "STRIPE_PRICE_TRADER" },
-  pro: { name: "Pro", credits: 5, priceEnv: "STRIPE_PRICE_PRO" },
-  elite: { name: "Elite", credits: 10, priceEnv: "STRIPE_PRICE_ELITE" },
+  trader: { name: "Trader", credits: 1, priceEnv: "STRIPE_PRICE_TRADER" },
+  pro: { name: "Pro", credits: 3, priceEnv: "STRIPE_PRICE_PRO" },
+  elite: { name: "Elite", credits: 7, priceEnv: "STRIPE_PRICE_ELITE" },
 } as const;
 
 export type PaidPlan = keyof typeof paidPlans;

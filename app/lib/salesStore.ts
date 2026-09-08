@@ -34,7 +34,9 @@ export type SaleOrder = {
   stripeRefundId?: string | null;
   currency: string;
   itemAmountCents: number;
-  platformFeeCents: number;
+  platformFeeCents: number; 
+  platformFeeBps: number;
+sellerPlan: string;
   sellerPayoutCents: number;
   paymentStatus: string;
   authenticationStatus: string;
@@ -75,6 +77,8 @@ function normaliseOrder(row: any): SaleOrder {
     currency: row.currency || "usd",
     itemAmountCents: Number(row.item_amount_cents),
     platformFeeCents: Number(row.platform_fee_cents),
+    platformFeeBps: Number(row.platform_fee_bps ?? 0),
+    sellerPlan: row.seller_plan || "collector",
     sellerPayoutCents: Number(row.seller_payout_cents),
     paymentStatus: row.payment_status,
     authenticationStatus: row.authentication_status,
@@ -131,6 +135,8 @@ export async function createSaleOrder(input: {
   listing: Trade;
   buyerUserId: string;
   platformFeeCents: number;
+  platformFeeBps: number;
+  sellerPlan: string;
 }) {
   if (!input.listing.user_id || !input.listing.salePriceCents) throw new Error("This listing cannot be purchased.");
   if (String(input.listing.user_id) === String(input.buyerUserId)) throw new Error("You cannot purchase your own listing.");
@@ -142,6 +148,8 @@ export async function createSaleOrder(input: {
     currency: input.listing.currency || "usd",
     item_amount_cents: input.listing.salePriceCents,
     platform_fee_cents: input.platformFeeCents,
+    platform_fee_bps: input.platformFeeBps,
+seller_plan: input.sellerPlan,
     seller_payout_cents: payout,
     payment_status: "pending",
     authentication_status: "not_started",

@@ -24,10 +24,10 @@ export default function TopTabs() {
     async function checkPullShieldAccess() {
       const token = await getCurrentAccessToken();
       if (!token) return;
-      const response = await fetch("/api/pullshield", {
-        method: "HEAD",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const response = await fetch("/api/pullshield", {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: "no-store",
+});
       if (active) setCanUsePullShield(response.ok);
     }
 
