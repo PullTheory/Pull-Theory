@@ -18,7 +18,10 @@ export async function GET(request: Request) {
   }
 
   const searchableQuery = query.replace(/[^a-zA-Z0-9 '\-]/g, "").trim();
-  const providerNumber = cardNumber.replace(/[^a-zA-Z0-9\-]/g, "");
+  const sanitizedNumber = cardNumber.replace(/[^a-zA-Z0-9\-]/g, "");
+  const providerNumber = /^\d+$/.test(sanitizedNumber)
+    ? String(Number(sanitizedNumber))
+    : sanitizedNumber;
 
   let providerQuery = "";
   if (query) {
@@ -77,11 +80,15 @@ export async function GET(request: Request) {
       }
 
       const normalizedName = (searchableQuery || query).replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-      const normalizedNumber = cardNumber.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+      const normalizedNumber = /^\d+$/.test(sanitizedNumber)
+        ? String(Number(sanitizedNumber))
+        : sanitizedNumber.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
       const cards = collected
         .filter((card: { name?: string; number?: string }) => {
           const nameMatches = !normalizedName || String(card.name ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase().startsWith(normalizedName);
-          const numberMatches = !normalizedNumber || String(card.number ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase().startsWith(normalizedNumber);
+          const cardNumberValue = String(card.number ?? "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+          const comparableCardNumber = /^\d+$/.test(cardNumberValue) ? String(Number(cardNumberValue)) : cardNumberValue;
+          const numberMatches = !normalizedNumber || comparableCardNumber.startsWith(normalizedNumber);
           return nameMatches && numberMatches;
         })
         .slice(0, resultLimit);
