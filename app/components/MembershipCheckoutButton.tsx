@@ -44,5 +44,5 @@ export default function MembershipCheckoutButton({ plan, children, featured = fa
     void beginCheckout();
   }, [plan]);
 
-  return <div className="mt-8"><button type="button" disabled={loading} onClick={() => void beginCheckout()} className={`block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60 ${featured ? "bg-violet-500 text-white hover:bg-violet-400" : "border border-white/15 text-white hover:border-violet-300/60 hover:bg-white/[0.06]"}`}>{loading ? "Opening secure checkout..." : children}</button>{message && <p className="mt-3 text-center text-xs text-rose-200">{message}</p>}</div>;
+  return <div className="mt-8"><button type="button" disabled={loading} onClick={() => void beginCheckout()} className="block w-full rounded-2xl bg-violet-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-wait disabled:opacity-60">{loading ? "Opening secure checkout..." : children}</button>{message && <p className="mt-3 text-center text-xs text-rose-200">{message}</p>}</div>;
 }
