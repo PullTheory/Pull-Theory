@@ -3,7 +3,6 @@ import { getStripe } from "../../../../lib/stripe";
 import { consumePullShieldCredit, getPullShieldAccess, savePullShieldCheckout } from "../../../../lib/pullshieldBilling";
 
 type RouteContext = { params: Promise<{ id: string }> };
-
 export const runtime = "nodejs";
 
 export async function POST(req: Request, { params }: RouteContext) {
@@ -11,7 +10,6 @@ export async function POST(req: Request, { params }: RouteContext) {
   try {
     const id = Number(idParam);
     if (!Number.isInteger(id)) return NextResponse.json({ error: "invalid id" }, { status: 400 });
-
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
     const { getUserFromToken, approveOffer } = await import("../../../../lib/tradesStore");
@@ -21,30 +19,18 @@ export async function POST(req: Request, { params }: RouteContext) {
     const access = await getPullShieldAccess(user.id, id);
     if (!access.paid) {
       if (access.credits > 0) {
-        const consumed = await consumePullShieldCredit(user.id);
-        if (!consumed) return NextResponse.json({ error: "Your PullShield credit changed. Please try again." }, { status: 409 });
+        if (!(await consumePullShieldCredit(user.id))) return NextResponse.json({ error: "Your PullShield credit changed. Please try again." }, { status: 409 });
       } else {
         const origin = new URL(req.url).origin;
-        const stripe = getStripe();
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
           mode: "payment",
           customer: access.customerId || undefined,
           customer_email: access.customerId ? undefined : user.email || undefined,
           client_reference_id: user.id,
-          line_items: [{
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: access.amountCents,
-              product_data: {
-                name: "PullShield Protected Trade",
-                description: `One-time PullShield trade fee — ${access.plan} member rate`,
-              },
-            },
-          }],
+          line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: access.amountCents, product_data: { name: "PullShield Protected Trade", description: `One-time PullShield trade fee — ${access.plan} member rate` } } }],
           metadata: { kind: "pullshield_trade", offer_id: String(id), user_id: user.id, plan: access.plan },
           payment_intent_data: { metadata: { kind: "pullshield_trade", offer_id: String(id), user_id: user.id, plan: access.plan } },
-          success_url: `${origin}/offers?pullshield=paid&offer=${id}`,
+          success_url: `${origin}/api/pullshield/trade-payment/complete?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${origin}/offers?pullshield=cancelled&offer=${id}`,
           automatic_tax: { enabled: true },
         });
@@ -52,7 +38,6 @@ export async function POST(req: Request, { params }: RouteContext) {
         return NextResponse.json({ status: "payment_required", checkoutUrl: session.url, amountCents: access.amountCents, plan: access.plan }, { status: 402 });
       }
     }
-
     const result = await approveOffer(id, user.id);
     if (!result) return NextResponse.json({ error: "not found or unauthorized" }, { status: 404 });
     return NextResponse.json({ status: "ok", offer: result });
