@@ -6,6 +6,7 @@ import { getCurrentAccessToken, getSupabaseClient } from "../../lib/supabase";
 import { uploadTradePhotos } from "../../lib/tradePhotos";
 import { cardFinishLabel, encodeCardDetails, formatCardTitle, type CardDetails, type CardFinish } from "../../lib/cardDetails";
 import CameraCapture from "../../components/CameraCapture";
+import { normalizeCardNumber } from "../../lib/cardNumber";
 
 type CardSuggestion = {
   id: string;
@@ -123,10 +124,11 @@ export default function MarketplaceListingPage() {
   function chooseCard(card: CardSuggestion) {
     const price = marketPrice(card);
     setCardName(card.name);
-    setCardNumberSearch(card.number || "");
+    const normalizedCardNumber = normalizeCardNumber(card.number || "");
+    setCardNumberSearch(normalizedCardNumber);
     setDetails({
       setName: card.set?.name || "",
-      cardNumber: card.number || "",
+      cardNumber: normalizedCardNumber,
       year: card.set?.releaseDate?.slice(0, 4) || "",
       estimatedValue: marketValue(card),
     });
@@ -262,7 +264,7 @@ export default function MarketplaceListingPage() {
                   </label>
                   <label className="block text-lg text-zinc-300">
                     Card #
-                    <input value={cardNumberSearch} onChange={(event) => setCardNumberSearch(event.target.value)} placeholder="e.g. 075" className={inputClass} />
+                    <input value={cardNumberSearch} onChange={(event) => setCardNumberSearch(event.target.value)} onBlur={() => setCardNumberSearch((current) => normalizeCardNumber(current))} inputMode="numeric" placeholder="e.g. 098" className={inputClass} />
                   </label>
                 </div>
 
@@ -289,7 +291,7 @@ export default function MarketplaceListingPage() {
                           <div className="p-3">
                             <strong className="block truncate text-sm text-white">{card.name}</strong>
                             <span className="mt-1 block truncate text-xs text-zinc-400">{card.set?.name}</span>
-                            <span className="mt-1 block text-xs text-zinc-500">#{card.number}</span>
+                            <span className="mt-1 block text-xs text-zinc-500">#{normalizeCardNumber(card.number || "")}</span>
                             {marketValue(card) && <span className="mt-2 block text-xs font-semibold text-emerald-300">{marketValue(card)}</span>}
                           </div>
                         </button>

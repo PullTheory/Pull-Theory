@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { normalizeCardNumber } from "../../../lib/cardNumber";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = url.searchParams.get("q")?.trim() ?? "";
-  const cardNumber = url.searchParams.get("number")?.trim() ?? "";
+  const cardNumber = normalizeCardNumber(url.searchParams.get("number") ?? "");
   const requestedLimit = Number(url.searchParams.get("limit") ?? "250");
   const resultLimit = Number.isFinite(requestedLimit)
     ? Math.min(300, Math.max(1, Math.floor(requestedLimit)))
