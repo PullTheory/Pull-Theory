@@ -26,17 +26,19 @@ export default function LoginPage() {
       const supabase = getSupabaseClient();
       if (!supabase) return;
       const { data } = await supabase.auth.getSession();
-      if (data.session) router.replace(destination);
+      if (data.session) { void recordTrafficEvent("existing_session_returned"); router.replace(destination); return; }
+      void recordTrafficEvent("login_opened");
     }
     void checkSession();
   }, [router]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setLoading(true); setMessage("");
+    void recordTrafficEvent("login_attempted");
     const supabase = getSupabaseClient();
-    if (!supabase) { setMessage("Supabase client not available."); setLoading(false); return; }
+    if (!supabase) { void recordTrafficEvent("login_failed"); setMessage("Supabase client not available."); setLoading(false); return; }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setMessage(error.message); setLoading(false); return; }
+    if (error) { void recordTrafficEvent("login_failed"); setMessage(error.message); setLoading(false); return; }
     void recordTrafficEvent("login_completed");
     router.push(returnTo);
   }
