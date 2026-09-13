@@ -178,6 +178,13 @@ export default function PullShieldDeskPage() {
             .includes(query)),
     );
   }, [queue, search, shipments]);
+  const shippedShipments = useMemo(
+    () =>
+      shipments.filter(({ offer }) =>
+        ["return_shipped", "completed"].includes(offer.status ?? ""),
+      ),
+    [shipments],
+  );
 
   return (
     <main className="min-h-screen bg-[#050506]/70 px-6 py-12 text-white">
@@ -422,6 +429,73 @@ export default function PullShieldDeskPage() {
             ) : (
               <div className="rounded-3xl border border-dashed border-white/15 p-10 text-center text-zinc-400">
                 No trades match this view.
+              </div>
+            )}
+          </div>
+          <div className="mt-10 border-t border-white/10 pt-8">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                  Shipping history
+                </p>
+                <h3 className="mt-2 text-2xl font-semibold">Shipped cards</h3>
+                <p className="mt-2 text-sm text-zinc-400">
+                  Destination addresses for cards that have been shipped back to collectors.
+                </p>
+              </div>
+              <span className="rounded-full bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                {shippedShipments.length} trades
+              </span>
+            </div>
+            {shippedShipments.length ? (
+              <div className="mt-5 space-y-4">
+                {shippedShipments.map(({ offer, listing }) => (
+                  <article
+                    key={`shipped-${offer.id}`}
+                    className="rounded-3xl border border-emerald-300/15 bg-emerald-400/[0.04] p-5"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-emerald-200">
+                        Trade #{offer.id}
+                      </p>
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold capitalize text-zinc-200">
+                        {(offer.status ?? "return_shipped").replaceAll("_", " ")}
+                      </span>
+                    </div>
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-300">
+                          Card shipped
+                        </p>
+                        <p className="mt-2 font-semibold">{listing.offeredCard}</p>
+                        <p className="mt-4 text-xs uppercase tracking-[0.14em] text-zinc-500">
+                          Ship to
+                        </p>
+                        <p className="mt-2 font-semibold">{offer.name}</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-200">
+                          {offer.shippingAddress}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-300">
+                          Card shipped
+                        </p>
+                        <p className="mt-2 font-semibold">{offer.offeredCard}</p>
+                        <p className="mt-4 text-xs uppercase tracking-[0.14em] text-zinc-500">
+                          Ship to
+                        </p>
+                        <p className="mt-2 font-semibold">{listing.name}</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-200">
+                          {listing.shippingAddress}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-3xl border border-dashed border-white/15 p-8 text-center text-sm text-zinc-400">
+                No shipped cards yet.
               </div>
             )}
           </div>
