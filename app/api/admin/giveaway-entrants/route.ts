@@ -1,34 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { getUserFromToken } from "../../../lib/tradesStore";
 import { isPullTheoryOperator } from "../../../lib/operator";
-
-export const dynamic = "force-dynamic";
-
-type Entrant = { id: string; username: string; email: string; signedUpAt: string; emailConfirmed: boolean };
-
-export async function GET(request: Request) {
-  const authorization = request.headers.get("authorization") ?? "";
-  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : null;
-  const user = await getUserFromToken(token);
-  if (!user || !isPullTheoryOperator(user.email)) {
-    return Response.json({ error: "Giveaway entries are only available to the PullShield operator account." }, { status: 403 });
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) return Response.json({ error: "Giveaway entrant access is not configured." }, { status: 503 });
-
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-  const entrants: Entrant[] = [];
-  const perPage = 1000;
-  let page = 1;
-  while (true) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
-    if (error) return Response.json({ error: error.message }, { status: 500 });
-    entrants.push(...data.users.map((user) => ({ id: user.id, username: (typeof user.user_metadata?.username === "string" && user.user_metadata.username.trim()) || "No username", email: user.email || "No email", signedUpAt: user.created_at, emailConfirmed: Boolean(user.email_confirmed_at) })));
-    if (data.users.length < perPage) break;
-    page += 1;
-  }
-  entrants.sort((a, b) => Date.parse(b.signedUpAt) - Date.parse(a.signedUpAt));
-  return Response.json({ entrants, total: entrants.length }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
-}
+export const dynamic="force-dynamic";
+async function operator(request:Request){const authorization=request.headers.get("authorization")??"";const user=await getUserFromToken(authorization.startsWith("Bearer ")?authorization.slice(7):null);return user&&isPullTheoryOperator(user.email)?user:null}
+function db(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;return url&&key?createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}}):null}
+export async function GET(request:Request){if(!await operator(request))return Response.json({error:"Giveaway entries are only available to the PullShield operator account."},{status:403});const admin=db();if(!admin)return Response.json({error:"Giveaway entrant access is not configured."},{status:503});const entrants:any[]=[];let page=1;while(true){const{data,error}=await admin.auth.admin.listUsers({page,perPage:1000});if(error)return Response.json({error:error.message},{status:500});entrants.push(...data.users.map(u=>({id:u.id,username:(typeof u.user_metadata?.username==="string"&&u.user_metadata.username.trim())||"No username",email:u.email||"No email",signedUpAt:u.created_at,emailConfirmed:Boolean(u.email_confirmed_at)})));if(data.users.length<1000)break;page++;}entrants.sort((a,b)=>Date.parse(b.signedUpAt)-Date.parse(a.signedUpAt));const {data:claims,error:ce}=await admin.from("welcome_rip_claims").select("id,user_id,prize_id,decision,decided_at,shipping_status,shipped_at").eq("decision","accepted").eq("shipping_status","awaiting_shipment").order("decided_at",{ascending:true});if(ce)return Response.json({error:ce.message},{status:500});const shipping=[];for(const c of claims||[]){const[{data:h},{data:p}]=await Promise.all([admin.from("welcome_rip_households").select("shipping_name,address_line1,address_line2,city,region,postal_code,country").eq("user_id",c.user_id).maybeSingle(),admin.from("welcome_rip_prizes").select("card_name,display_name,card_set,card_number,image_url").eq("id",c.prize_id).maybeSingle()]);const entrant=entrants.find(e=>e.id===c.user_id);shipping.push({claimId:c.id,userId:c.user_id,name:h?.shipping_name||"",email:entrant?.email||"",username:entrant?.username||"",address1:h?.address_line1||"",address2:h?.address_line2||"",city:h?.city||"",region:h?.region||"",postalCode:h?.postal_code||"",country:h?.country||"US",cardName:p?.card_name||p?.display_name||"Welcome Rip card",cardSet:p?.card_set||"",cardNumber:p?.card_number||"",imageUrl:p?.image_url||null,acceptedAt:c.decided_at});}return Response.json({entrants,total:entrants.length,shipping,awaitingShipment:shipping.length},{headers:{"Cache-Control":"private, no-store, max-age=0"}})}
+export async function PATCH(request:Request){if(!await operator(request))return Response.json({error:"Giveaway entries are only available to the PullShield operator account."},{status:403});const admin=db();if(!admin)return Response.json({error:"Giveaway entrant access is not configured."},{status:503});let body:any={};try{body=await request.json()}catch{}const claimId=String(body.claimId||"").trim();if(!claimId)return Response.json({error:"Claim is required."},{status:400});const {data,error}=await admin.from("welcome_rip_claims").update({shipping_status:"shipped",shipped_at:new Date().toISOString()}).eq("id",claimId).eq("decision","accepted").eq("shipping_status","awaiting_shipment").select("id").maybeSingle();if(error)return Response.json({error:error.message},{status:500});if(!data)return Response.json({error:"That card is no longer awaiting shipment."},{status:409});return Response.json({ok:true})}
