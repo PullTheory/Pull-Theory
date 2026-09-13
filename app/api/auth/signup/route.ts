@@ -6,7 +6,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;
 const VALID_PLANS = new Set(["collector", "trader", "pro", "elite"]);
 function isExistingAccountError(error: { code?: string; message?: string }) { return error.code === "user_already_exists" || error.code === "email_exists" || /already (?:been )?registered|already exists/i.test(error.message || ""); }
-function escapeHtml(value: string) { return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char] || char)); }
+function escapeHtml(value: string) { return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[char] || char)); }
 
 export async function POST(request: NextRequest) {
  try {
