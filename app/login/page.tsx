@@ -11,6 +11,20 @@ function requestedDestination() {
   return requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/marketplace/browse";
 }
 
+async function postLoginDestination(fallback: string) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return fallback;
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return fallback;
+  try {
+    const response = await fetch("/api/welcome-rip", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+    if (!response.ok) return fallback;
+    const body = await response.json();
+    return body.eligible || body.alreadyClaimed ? "/welcome-rip" : fallback;
+  } catch { return fallback; }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -26,7 +40,7 @@ export default function LoginPage() {
       const supabase = getSupabaseClient();
       if (!supabase) return;
       const { data } = await supabase.auth.getSession();
-      if (data.session) { void recordTrafficEvent("existing_session_returned"); router.replace(destination); return; }
+      if (data.session) { void recordTrafficEvent("existing_session_returned"); router.replace(await postLoginDestination(destination)); return; }
       void recordTrafficEvent("login_opened");
     }
     void checkSession();
@@ -40,7 +54,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { void recordTrafficEvent("login_failed"); setMessage(error.message); setLoading(false); return; }
     void recordTrafficEvent("login_completed");
-    router.push(returnTo);
+    router.push(await postLoginDestination(returnTo));
   }
 
   const signupHref = `/signup?returnTo=${encodeURIComponent(returnTo)}`;
