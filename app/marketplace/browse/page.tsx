@@ -184,12 +184,9 @@ export default function BrowseMarketplacePage() {
               </p>
             </div>
 
-            <Link
-              href="/"
-              className="text-sm font-semibold text-amber-200"
-            >
-              Giveaway details →
-            </Link>
+            <span className="text-sm font-semibold text-amber-200">
+              Winner details shown here
+            </span>
           </section>
         )}
 
