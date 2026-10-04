@@ -176,11 +176,11 @@ export default function BrowseMarketplacePage() {
           <section className="mb-6 flex flex-col gap-3 rounded-3xl border border-amber-300/25 bg-amber-300/[0.07] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold text-amber-100">
-                🎁 Founding member giveaway: win the PSA 10 Pikachu
+                🎉 Pikachu Giveaway Winner
               </p>
 
               <p className="mt-1 text-xs text-zinc-300">
-                Free entry for the first 500 members · Sign up by 09/20/2026
+                aplaceformyshit@gmail.com · Prize not yet claimed · 30 days to claim
               </p>
             </div>
 
@@ -546,7 +546,7 @@ export function PublicLanding() {
                   href="/signup"
                   className="rounded-2xl bg-violet-600 px-7 py-4 font-bold shadow-[0_14px_40px_rgba(124,58,237,0.42)]"
                 >
-                  Join free + enter to win
+                  Join Pull Theory free
                 </Link>
               </div>
 
@@ -563,11 +563,11 @@ export function PublicLanding() {
               />
 
               <p className="mt-4 text-center font-bold">
-                One of our first 500 members will win this PSA 10 Pikachu.
+                🎉 Pikachu Giveaway Winner — aplaceformyshit@gmail.com
               </p>
 
               <p className="mt-2 text-center text-sm text-amber-200">
-                Sign up by 09/20/2026
+                Prize not yet claimed. The winner has 30 days to claim it or the giveaway will restart.
               </p>
             </aside>
           </div>
