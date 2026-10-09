@@ -1,11 +1,37 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getTrades, getUserFromToken } from "../../lib/tradesStore";
+import { decodeCardDetails } from "../../lib/cardDetails";
 import { recordLifecycleEvent } from "../../lib/trafficStore";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+function sameCardName(a: unknown, b: unknown) {
+  const left = normalize(String(a ?? ""));
+  const right = normalize(String(b ?? ""));
+  return Boolean(left && right && left === right);
+}
+
+function wantedCardMatchesListing(want: any, listing: any) {
+  const listingDetails = decodeCardDetails(listing.notes);
+  const sameName = sameCardName(want.card_name, listing.offeredCard);
+  if (!sameName) return false;
+
+  const wantedSet = normalize(String(want.card_set ?? ""));
+  const listingSet = normalize(String(listingDetails.setName ?? ""));
+  const wantedNumber = normalize(String(want.card_number ?? ""));
+  const listingNumber = normalize(String(listingDetails.cardNumber ?? ""));
+
+  // When both records have structured set/number data, require both to agree.
+  // Otherwise fall back to the exact normalized card name rather than a risky
+  // substring match (e.g. "Charizard" matching "Charizard ex").
+  if (wantedSet && listingSet && wantedSet !== listingSet) return false;
+  if (wantedNumber && listingNumber && wantedNumber !== listingNumber) return false;
+  if ((wantedSet && !listingSet) || (wantedNumber && !listingNumber)) return false;
+  return true;
+}
 
 export async function GET(request: Request) {
   const authorization = request.headers.get("authorization") ?? "";
@@ -19,12 +45,17 @@ export async function GET(request: Request) {
     getTrades({ is_listing: true, page: 1, pageSize: 500 }),
   ]);
   if (wantsError || collectionError) return NextResponse.json({ error: wantsError?.message ?? collectionError?.message ?? "Unable to calculate PullMatches." }, { status: 500 });
-  const matches = listings.items.filter((listing) => listing.status === "pending" && String(listing.user_id) !== String(user.id)).flatMap((listing) => (wants ?? []).flatMap((want) => {
-    const wantedName = normalize(String(want.card_name));
-    if (!wantedName || !normalize(listing.offeredCard).includes(wantedName)) return [];
-    const offeredFromCollection = (collection ?? []).find((card) => normalize(listing.desiredCard).includes(normalize(String(card.card_name))));
-    return offeredFromCollection ? [{ listing: { id: listing.id, offeredCard: listing.offeredCard, desiredCard: listing.desiredCard, name: listing.name, photoUrls: listing.photoUrls ?? [] }, want, offeredFromCollection }] : [];
-  }));
+
+  const matches = listings.items
+    .filter((listing) => listing.status === "pending" && String(listing.user_id) !== String(user.id))
+    .flatMap((listing) => (wants ?? []).flatMap((want) => {
+      if (!wantedCardMatchesListing(want, listing)) return [];
+      const offeredFromCollection = (collection ?? []).find((card) => sameCardName(listing.desiredCard, card.card_name));
+      return offeredFromCollection
+        ? [{ listing: { id: listing.id, offeredCard: listing.offeredCard, desiredCard: listing.desiredCard, name: listing.name, photoUrls: listing.photoUrls ?? [] }, want, offeredFromCollection }]
+        : [];
+    }));
+
   if (matches.length) await recordLifecycleEvent(user.id, "first_pullmatch");
   return NextResponse.json({ matches, wants: wants ?? [] });
 }
