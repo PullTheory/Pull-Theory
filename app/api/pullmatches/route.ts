@@ -27,15 +27,11 @@ function wantedCardMatchesListing(want: any, listing: any) {
 }
 
 function collectionCardMatchesDesired(collectionCard: any, listing: any) {
-  const listingDetails = decodeCardDetails(listing.notes);
-  if (!sameCardName(listing.desiredCard, collectionCard.card_name)) return false;
-  const desiredSet = normalize(String(listingDetails.desiredSetName ?? ""));
-  const collectionSet = normalize(String(collectionCard.card_set ?? ""));
-  const desiredNumber = normalize(String(listingDetails.desiredCardNumber ?? ""));
-  const collectionNumber = normalize(String(collectionCard.card_number ?? ""));
-  if (desiredSet && (!collectionSet || desiredSet !== collectionSet)) return false;
-  if (desiredNumber && (!collectionNumber || desiredNumber !== collectionNumber)) return false;
-  return true;
+  // Desired-card metadata is not currently stored separately from the listing's
+  // desired-card name, so only use exact card-name matching here. This avoids
+  // reading fields that do not exist in CardDetails and, more importantly,
+  // avoids claiming a set/number match that the seller never supplied.
+  return sameCardName(listing.desiredCard, collectionCard.card_name);
 }
 
 export async function GET(request: Request) {
