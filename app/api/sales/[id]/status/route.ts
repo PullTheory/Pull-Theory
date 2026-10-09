@@ -60,15 +60,16 @@ export async function POST(request: Request, { params }: Context) {
         const paymentIntent = await stripe.paymentIntents.retrieve(order.stripePaymentIntentId);
         const chargeId = typeof paymentIntent.latest_charge === "string" ? paymentIntent.latest_charge : paymentIntent.latest_charge?.id;
         if (!chargeId) return NextResponse.json({ error: "A settled charge is required before releasing the seller payout." }, { status: 409 });
-        const transfer = await stripe.transfers.create({ amount: order.sellerPayoutCents, currency: order.currency, destination: seller.stripeAccountId, source_transaction: chargeId, metadata: { sale_order_id: String(order.id), listing_id: String(order.listingId), pullshield_verified: "true" } });
+        const transfer = await stripe.transfers.create({ amount: order.sellerPayoutCents, currency: order.currency, destination: seller.stripeAccountId, source_transaction: chargeId, metadata: { sale_order_id: String(order.id), listing_id: String(order.listingId), pullshield_verified: "true" } }, { idempotencyKey: `sale-order-payout-${order.id}` });
         updates.stripe_transfer_id = transfer.id;
         updates.payment_status = "payout_released";
       }
     }
 
     if (status === "authentication_failed" || status === "refunded_disputed") {
+      if (order.stripeTransferId) return NextResponse.json({ error: "This order has already been paid out and cannot be refunded through the normal PullShield refund path." }, { status: 409 });
       if (order.stripePaymentIntentId && !order.stripeRefundId) {
-        const refund = await getStripe().refunds.create({ payment_intent: order.stripePaymentIntentId, reason: "requested_by_customer" });
+        const refund = await getStripe().refunds.create({ payment_intent: order.stripePaymentIntentId, reason: "requested_by_customer" }, { idempotencyKey: `sale-order-refund-${order.id}` });
         updates.stripe_refund_id = refund.id;
         updates.payment_status = "refunded";
       }
