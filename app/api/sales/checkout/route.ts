@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getStripe } from "../../../lib/stripe";
-import { getPurchasableListing, getSellerAccount, updateSaleOrder, createSaleOrder } from "../../../lib/salesStore";
+import { getPurchasableListing, getSellerAccount, updateSaleOrder, createSaleOrder, releaseCheckoutReservation } from "../../../lib/salesStore";
 import { getUserFromToken } from "../../../lib/tradesStore";
 
 const sellerFeeBasisPoints = { collector: 800, trader: 650, pro: 500, elite: 350 } as const;
@@ -42,11 +42,16 @@ export async function POST(request: Request) {
     const platformFeeBps = sellerFeeBasisPoints[sellerPlan];
     const platformFeeCents = Math.round(listing.salePriceCents * platformFeeBps / 10_000);
 
-    const order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+    let order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
     if (order.stripeCheckoutSessionId) {
       const existingSession = await getStripe().checkout.sessions.retrieve(order.stripeCheckoutSessionId);
       if (existingSession.status === "open" && existingSession.url) return NextResponse.json({ url: existingSession.url });
-      throw new Error("The existing checkout session is no longer active. Please try again.");
+      if (existingSession.status === "expired") {
+        await releaseCheckoutReservation(order.id, user.id);
+        order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+      } else {
+        throw new Error("The existing checkout session is no longer active. Please try again.");
+      }
     }
 
     const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
