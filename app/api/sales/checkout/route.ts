@@ -43,7 +43,11 @@ export async function POST(request: Request) {
     const platformFeeCents = Math.round(listing.salePriceCents * platformFeeBps / 10_000);
 
     const order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
-    if (order.stripeCheckoutSessionId) return NextResponse.json({ url: `https://checkout.stripe.com/c/pay/${order.stripeCheckoutSessionId}` });
+    if (order.stripeCheckoutSessionId) {
+      const existingSession = await getStripe().checkout.sessions.retrieve(order.stripeCheckoutSessionId);
+      if (existingSession.status === "open" && existingSession.url) return NextResponse.json({ url: existingSession.url });
+      throw new Error("The existing checkout session is no longer active. Please try again.");
+    }
 
     const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     const session = await getStripe().checkout.sessions.create({
