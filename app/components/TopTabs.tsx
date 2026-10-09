@@ -7,6 +7,7 @@ import { getCurrentAccessToken } from "../lib/supabase";
 
 const tabs = [
   { label: "Marketplace", href: "/marketplace/browse", match: "/marketplace" },
+  { label: "My Want List", href: "/wants", match: "/wants" },
   { label: "PullMatches", href: "/matches", match: "/matches" },
   { label: "My Collection", href: "/portfolio", match: "/portfolio" },
   { label: "Trade Center", href: "/offers", match: "/offers" },
