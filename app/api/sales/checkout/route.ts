@@ -45,8 +45,31 @@ export async function POST(request: Request) {
     const platformFeeBps = sellerFeeBasisPoints[sellerPlan];
     const platformFeeCents = Math.round(listing.salePriceCents * platformFeeBps / 10_000);
 
-    const order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+    let order;
+    try {
+      order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message !== "This card is currently being checked out by another buyer.") throw error;
+      throw error;
+    }
     reservedOrderId = order.id;
+
+    if (order.stripeCheckoutSessionId) {
+      const existingSession = await getStripe().checkout.sessions.retrieve(order.stripeCheckoutSessionId);
+      if (existingSession.status === "open" && existingSession.url) {
+        reservedOrderId = null;
+        return NextResponse.json({ url: existingSession.url });
+      }
+      if (existingSession.status === "expired") {
+        await releaseCheckoutReservation(order.id, user.id);
+        reservedOrderId = null;
+        order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+        reservedOrderId = order.id;
+      } else {
+        throw new Error("The existing checkout session is no longer active. Please try again.");
+      }
+    }
 
     const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     let session;
