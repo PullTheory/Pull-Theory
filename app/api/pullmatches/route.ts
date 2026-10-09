@@ -16,20 +16,25 @@ function sameCardName(a: unknown, b: unknown) {
 
 function wantedCardMatchesListing(want: any, listing: any) {
   const listingDetails = decodeCardDetails(listing.notes);
-  const sameName = sameCardName(want.card_name, listing.offeredCard);
-  if (!sameName) return false;
-
+  if (!sameCardName(want.card_name, listing.offeredCard)) return false;
   const wantedSet = normalize(String(want.card_set ?? ""));
   const listingSet = normalize(String(listingDetails.setName ?? ""));
   const wantedNumber = normalize(String(want.card_number ?? ""));
   const listingNumber = normalize(String(listingDetails.cardNumber ?? ""));
+  if (wantedSet && (!listingSet || wantedSet !== listingSet)) return false;
+  if (wantedNumber && (!listingNumber || wantedNumber !== listingNumber)) return false;
+  return true;
+}
 
-  // When both records have structured set/number data, require both to agree.
-  // Otherwise fall back to the exact normalized card name rather than a risky
-  // substring match (e.g. "Charizard" matching "Charizard ex").
-  if (wantedSet && listingSet && wantedSet !== listingSet) return false;
-  if (wantedNumber && listingNumber && wantedNumber !== listingNumber) return false;
-  if ((wantedSet && !listingSet) || (wantedNumber && !listingNumber)) return false;
+function collectionCardMatchesDesired(collectionCard: any, listing: any) {
+  const listingDetails = decodeCardDetails(listing.notes);
+  if (!sameCardName(listing.desiredCard, collectionCard.card_name)) return false;
+  const desiredSet = normalize(String(listingDetails.desiredSetName ?? ""));
+  const collectionSet = normalize(String(collectionCard.card_set ?? ""));
+  const desiredNumber = normalize(String(listingDetails.desiredCardNumber ?? ""));
+  const collectionNumber = normalize(String(collectionCard.card_number ?? ""));
+  if (desiredSet && (!collectionSet || desiredSet !== collectionSet)) return false;
+  if (desiredNumber && (!collectionNumber || desiredNumber !== collectionNumber)) return false;
   return true;
 }
 
@@ -41,7 +46,7 @@ export async function GET(request: Request) {
   const supabase = createClient(url, serviceKey);
   const [{ data: wants, error: wantsError }, { data: collection, error: collectionError }, listings] = await Promise.all([
     supabase.from("wanted_cards").select("*").eq("user_id", user.id),
-    supabase.from("collections").select("id, card_name, image_url").eq("user_id", user.id),
+    supabase.from("collections").select("id, card_name, card_set, card_number, image_url").eq("user_id", user.id),
     getTrades({ is_listing: true, page: 1, pageSize: 500 }),
   ]);
   if (wantsError || collectionError) return NextResponse.json({ error: wantsError?.message ?? collectionError?.message ?? "Unable to calculate PullMatches." }, { status: 500 });
@@ -50,10 +55,8 @@ export async function GET(request: Request) {
     .filter((listing) => listing.status === "pending" && String(listing.user_id) !== String(user.id))
     .flatMap((listing) => (wants ?? []).flatMap((want) => {
       if (!wantedCardMatchesListing(want, listing)) return [];
-      const offeredFromCollection = (collection ?? []).find((card) => sameCardName(listing.desiredCard, card.card_name));
-      return offeredFromCollection
-        ? [{ listing: { id: listing.id, offeredCard: listing.offeredCard, desiredCard: listing.desiredCard, name: listing.name, photoUrls: listing.photoUrls ?? [] }, want, offeredFromCollection }]
-        : [];
+      const offeredFromCollection = (collection ?? []).find((card) => collectionCardMatchesDesired(card, listing));
+      return offeredFromCollection ? [{ listing: { id: listing.id, offeredCard: listing.offeredCard, desiredCard: listing.desiredCard, name: listing.name, photoUrls: listing.photoUrls ?? [], salePriceCents: listing.salePriceCents ?? null, listingType: listing.listingType ?? "trade", created_at: listing.created_at ?? null }, want, offeredFromCollection }] : [];
     }));
 
   if (matches.length) await recordLifecycleEvent(user.id, "first_pullmatch");
