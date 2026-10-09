@@ -9,7 +9,6 @@ export const SALE_ORDER_STATUSES = [
 
 export type SaleOrderStatus = (typeof SALE_ORDER_STATUSES)[number];
 export type AuthenticationChecklist = Record<string, boolean>;
-
 export type SellerAccount = { userId: string; stripeAccountId: string; chargesEnabled: boolean; payoutsEnabled: boolean; detailsSubmitted: boolean };
 export type SaleOrder = {
   id: number; listingId: number; sellerUserId: string; buyerUserId: string;
@@ -48,9 +47,8 @@ export async function createSaleOrder(input: { listing: Trade; buyerUserId: stri
   if (!input.listing.user_id || !input.listing.salePriceCents) throw new Error("This listing cannot be purchased.");
   if (String(input.listing.user_id) === String(input.buyerUserId)) throw new Error("You cannot purchase your own listing.");
   const { data, error } = await admin().rpc("reserve_marketplace_sale_order", {
-    p_listing_id: Number(input.listing.id), p_buyer_user_id: String(input.buyerUserId),
-    p_platform_fee_cents: input.platformFeeCents, p_platform_fee_bps: input.platformFeeBps,
-    p_seller_plan: input.sellerPlan,
+    p_listing_id: Number(input.listing.id), p_buyer_user_id: String(input.buyerUserId), p_platform_fee_cents: input.platformFeeCents,
+    p_platform_fee_bps: input.platformFeeBps, p_seller_plan: input.sellerPlan,
   }).single();
   if (error) {
     if (error.message.includes("LISTING_CHECKOUT_IN_PROGRESS")) throw new Error("This card is currently being checked out by another buyer.");
@@ -58,6 +56,11 @@ export async function createSaleOrder(input: { listing: Trade; buyerUserId: stri
     throw error;
   }
   return normaliseOrder(data);
+}
+export async function releaseCheckoutReservation(orderId: number, buyerUserId: string) {
+  const { data, error } = await admin().rpc("release_marketplace_checkout_reservation", { p_order_id: orderId, p_buyer_user_id: buyerUserId });
+  if (error) throw error;
+  return Boolean(data);
 }
 export async function updateSaleOrder(id: number, updates: Record<string, unknown>) {
   if (updates.stripe_refund_id && (await getSaleOrder(id))?.stripeTransferId) throw new Error("A seller payout has already been released; a normal refund cannot be issued against this order.");
