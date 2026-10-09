@@ -67,6 +67,7 @@ export async function POST(request: Request, { params }: Context) {
     }
 
     if (status === "authentication_failed" || status === "refunded_disputed") {
+      if (order.stripeTransferId) return NextResponse.json({ error: "This order has already paid the seller; use the payout recovery/dispute process instead of a normal refund." }, { status: 409 });
       if (order.stripePaymentIntentId && !order.stripeRefundId) {
         const refund = await getStripe().refunds.create({ payment_intent: order.stripePaymentIntentId, reason: "requested_by_customer" });
         updates.stripe_refund_id = refund.id;
