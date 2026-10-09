@@ -47,9 +47,20 @@ export async function getAllSaleOrders() { const { data, error } = await admin()
 export async function createSaleOrder(input: { listing: Trade; buyerUserId: string; platformFeeCents: number; platformFeeBps: number; sellerPlan: string }) {
   if (!input.listing.user_id || !input.listing.salePriceCents) throw new Error("This listing cannot be purchased.");
   if (String(input.listing.user_id) === String(input.buyerUserId)) throw new Error("You cannot purchase your own listing.");
-  const payout = Math.max(0, input.listing.salePriceCents - input.platformFeeCents);
-  const { data, error } = await admin().from("sale_orders").insert({ listing_id: input.listing.id, seller_user_id: input.listing.user_id, buyer_user_id: input.buyerUserId, currency: input.listing.currency || "usd", item_amount_cents: input.listing.salePriceCents, platform_fee_cents: input.platformFeeCents, platform_fee_bps: input.platformFeeBps, seller_plan: input.sellerPlan, seller_payout_cents: payout, payment_status: "pending", authentication_status: "not_started", order_status: "checkout_started" }).select("*").single();
-  if (error) throw error; return normaliseOrder(data);
+  const { data, error } = await admin().rpc("reserve_marketplace_sale_order", {
+    p_listing_id: Number(input.listing.id), p_buyer_user_id: String(input.buyerUserId),
+    p_platform_fee_cents: input.platformFeeCents, p_platform_fee_bps: input.platformFeeBps,
+    p_seller_plan: input.sellerPlan,
+  }).single();
+  if (error) {
+    if (error.message.includes("LISTING_CHECKOUT_IN_PROGRESS")) throw new Error("This card is currently being checked out by another buyer.");
+    if (error.message.includes("LISTING_UNAVAILABLE")) throw new Error("This card is no longer available to purchase.");
+    throw error;
+  }
+  return normaliseOrder(data);
 }
-export async function updateSaleOrder(id: number, updates: Record<string, unknown>) { const { data, error } = await admin().from("sale_orders").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id).select("*").single(); if (error) throw error; return normaliseOrder(data); }
+export async function updateSaleOrder(id: number, updates: Record<string, unknown>) {
+  if (updates.stripe_refund_id && (await getSaleOrder(id))?.stripeTransferId) throw new Error("A seller payout has already been released; a normal refund cannot be issued against this order.");
+  const { data, error } = await admin().from("sale_orders").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id).select("*").single(); if (error) throw error; return normaliseOrder(data);
+}
 export async function getPurchasableListing(id: number) { const listing = await getTrade(id); if (!listing || !listing.is_listing || (listing.status && listing.status !== "pending")) return null; if ((listing.listingType !== "sell" && listing.listingType !== "trade_or_sell") || !listing.salePriceCents) return null; return listing; }
