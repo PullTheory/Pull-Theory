@@ -32,7 +32,9 @@ export default function NextPull({ ownedCount }: { ownedCount: number }) {
       try {
         const supabase = getSupabaseClient();
         const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-        const headers = data.session?.access_token ? { Authorization: `Bearer ${data.session.access_token}` } : {};
+        const headers: HeadersInit = data.session?.access_token
+          ? { Authorization: `Bearer ${data.session.access_token}` }
+          : {};
         const [wantResponse, listingResponse] = await Promise.all([
           fetch("/api/wants", { headers }),
           fetch("/api/trades?is_listing=true&pageSize=100", { headers }),
