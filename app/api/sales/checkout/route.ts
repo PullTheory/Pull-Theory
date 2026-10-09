@@ -22,10 +22,13 @@ async function getSellerPlan(userId: string) {
 }
 
 export async function POST(request: Request) {
+  let reservedOrderId: number | null = null;
+  let buyerUserId: string | null = null;
   try {
     const authorization = request.headers.get("authorization") ?? "";
     const user = await getUserFromToken(authorization.startsWith("Bearer ") ? authorization.slice(7) : null);
     if (!user) return NextResponse.json({ error: "Please sign in before buying a card." }, { status: 401 });
+    buyerUserId = user.id;
 
     const { listingId: rawListingId } = await request.json();
     const listingId = Number(rawListingId);
@@ -43,28 +46,40 @@ export async function POST(request: Request) {
     const platformFeeCents = Math.round(listing.salePriceCents * platformFeeBps / 10_000);
 
     let order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+    reservedOrderId = order.id;
     if (order.stripeCheckoutSessionId) {
       const existingSession = await getStripe().checkout.sessions.retrieve(order.stripeCheckoutSessionId);
       if (existingSession.status === "open" && existingSession.url) return NextResponse.json({ url: existingSession.url });
       if (existingSession.status === "expired") {
         await releaseCheckoutReservation(order.id, user.id);
+        reservedOrderId = null;
         order = await createSaleOrder({ listing, buyerUserId: user.id, platformFeeCents, platformFeeBps, sellerPlan });
+        reservedOrderId = order.id;
       } else {
         throw new Error("The existing checkout session is no longer active. Please try again.");
       }
     }
 
     const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
-    const session = await getStripe().checkout.sessions.create({
-      mode: "payment", customer_email: user.email ?? undefined,
-      line_items: [{ price_data: { currency: listing.currency || "usd", product_data: { name: listing.offeredCard, description: "PullShield-authenticated marketplace sale" }, unit_amount: listing.salePriceCents }, quantity: 1 }],
-      metadata: { kind: "marketplace_sale", sale_order_id: String(order.id), listing_id: String(listing.id), buyer_user_id: user.id, seller_plan: sellerPlan, platform_fee_bps: String(platformFeeBps) },
-      payment_intent_data: { metadata: { kind: "marketplace_sale", sale_order_id: String(order.id), listing_id: String(listing.id), seller_plan: sellerPlan, platform_fee_bps: String(platformFeeBps) } },
-      success_url: `${origin}/seller?purchase=success`, cancel_url: `${origin}/marketplace/${listing.id}?purchase=cancelled`,
-    });
+    let session;
+    try {
+      session = await getStripe().checkout.sessions.create({
+        mode: "payment", customer_email: user.email ?? undefined,
+        line_items: [{ price_data: { currency: listing.currency || "usd", product_data: { name: listing.offeredCard, description: "PullShield-authenticated marketplace sale" }, unit_amount: listing.salePriceCents }, quantity: 1 }],
+        metadata: { kind: "marketplace_sale", sale_order_id: String(order.id), listing_id: String(listing.id), buyer_user_id: user.id, seller_plan: sellerPlan, platform_fee_bps: String(platformFeeBps) },
+        payment_intent_data: { metadata: { kind: "marketplace_sale", sale_order_id: String(order.id), listing_id: String(listing.id), seller_plan: sellerPlan, platform_fee_bps: String(platformFeeBps) } },
+        success_url: `${origin}/seller?purchase=success`, cancel_url: `${origin}/marketplace/${listing.id}?purchase=cancelled`,
+      });
+    } catch (error) {
+      await releaseCheckoutReservation(order.id, user.id).catch(() => undefined);
+      reservedOrderId = null;
+      throw error;
+    }
     await updateSaleOrder(order.id, { stripe_checkout_session_id: session.id });
+    reservedOrderId = null;
     return NextResponse.json({ url: session.url });
   } catch (error) {
+    if (reservedOrderId && buyerUserId) await releaseCheckoutReservation(reservedOrderId, buyerUserId).catch(() => undefined);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to start secure checkout." }, { status: 500 });
   }
 }
