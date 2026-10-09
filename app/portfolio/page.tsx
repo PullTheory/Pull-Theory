@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "../lib/supabase";
 
 type Card = { id: string; card_id?: string; card_name: string; card_set?: string; card_number?: string; rarity?: string; language?: string; quantity_owned?: number; current_market_value?: string | number; price?: string | number; image_url?: string };
@@ -19,14 +19,14 @@ const money = (value: number) => value.toLocaleString("en-US", { style: "currenc
 
 export default function PortfolioPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const purchaseReturned = searchParams.get("purchase") === "success";
+  const [purchaseReturned, setPurchaseReturned] = useState(false);
 
   useEffect(() => {
+    setPurchaseReturned(new URLSearchParams(window.location.search).get("purchase") === "success");
     async function loadPortfolio() {
       try {
         const supabase = getSupabaseClient();
