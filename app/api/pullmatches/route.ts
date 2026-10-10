@@ -1,11 +1,38 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getTrades, getUserFromToken } from "../../lib/tradesStore";
+import { decodeCardDetails } from "../../lib/cardDetails";
 import { recordLifecycleEvent } from "../../lib/trafficStore";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+function sameCardName(a: unknown, b: unknown) {
+  const left = normalize(String(a ?? ""));
+  const right = normalize(String(b ?? ""));
+  return Boolean(left && right && left === right);
+}
+
+function wantedCardMatchesListing(want: any, listing: any) {
+  const listingDetails = decodeCardDetails(listing.notes);
+  if (!sameCardName(want.card_name, listing.offeredCard)) return false;
+  const wantedSet = normalize(String(want.card_set ?? ""));
+  const listingSet = normalize(String(listingDetails.setName ?? ""));
+  const wantedNumber = normalize(String(want.card_number ?? ""));
+  const listingNumber = normalize(String(listingDetails.cardNumber ?? ""));
+  if (wantedSet && (!listingSet || wantedSet !== listingSet)) return false;
+  if (wantedNumber && (!listingNumber || wantedNumber !== listingNumber)) return false;
+  return true;
+}
+
+function collectionCardMatchesDesired(collectionCard: any, listing: any) {
+  // Desired-card metadata is not currently stored separately from the listing's
+  // desired-card name, so only use exact card-name matching here. This avoids
+  // reading fields that do not exist in CardDetails and, more importantly,
+  // avoids claiming a set/number match that the seller never supplied.
+  return sameCardName(listing.desiredCard, collectionCard.card_name);
+}
 
 export async function GET(request: Request) {
   const authorization = request.headers.get("authorization") ?? "";
@@ -15,16 +42,19 @@ export async function GET(request: Request) {
   const supabase = createClient(url, serviceKey);
   const [{ data: wants, error: wantsError }, { data: collection, error: collectionError }, listings] = await Promise.all([
     supabase.from("wanted_cards").select("*").eq("user_id", user.id),
-    supabase.from("collections").select("id, card_name, image_url").eq("user_id", user.id),
+    supabase.from("collections").select("id, card_name, card_set, card_number, image_url").eq("user_id", user.id),
     getTrades({ is_listing: true, page: 1, pageSize: 500 }),
   ]);
   if (wantsError || collectionError) return NextResponse.json({ error: wantsError?.message ?? collectionError?.message ?? "Unable to calculate PullMatches." }, { status: 500 });
-  const matches = listings.items.filter((listing) => listing.status === "pending" && String(listing.user_id) !== String(user.id)).flatMap((listing) => (wants ?? []).flatMap((want) => {
-    const wantedName = normalize(String(want.card_name));
-    if (!wantedName || !normalize(listing.offeredCard).includes(wantedName)) return [];
-    const offeredFromCollection = (collection ?? []).find((card) => normalize(listing.desiredCard).includes(normalize(String(card.card_name))));
-    return offeredFromCollection ? [{ listing: { id: listing.id, offeredCard: listing.offeredCard, desiredCard: listing.desiredCard, name: listing.name, photoUrls: listing.photoUrls ?? [] }, want, offeredFromCollection }] : [];
-  }));
+
+  const matches = listings.items
+    .filter((listing) => listing.status === "pending" && String(listing.user_id) !== String(user.id))
+    .flatMap((listing) => (wants ?? []).flatMap((want) => {
+      if (!wantedCardMatchesListing(want, listing)) return [];
+      const offeredFromCollection = (collection ?? []).find((card) => collectionCardMatchesDesired(card, listing));
+      return offeredFromCollection ? [{ listing: { id: listing.id, offeredCard: listing.offeredCard, desiredCard: listing.desiredCard, name: listing.name, photoUrls: listing.photoUrls ?? [], salePriceCents: listing.salePriceCents ?? null, listingType: listing.listingType ?? "trade", created_at: listing.created_at ?? null }, want, offeredFromCollection }] : [];
+    }));
+
   if (matches.length) await recordLifecycleEvent(user.id, "first_pullmatch");
   return NextResponse.json({ matches, wants: wants ?? [] });
 }
