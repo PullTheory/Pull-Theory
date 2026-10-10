@@ -1,0 +1,1 @@
+Giveaway card photos are stored in this directory.
