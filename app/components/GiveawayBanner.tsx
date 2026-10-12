@@ -9,11 +9,11 @@ const giveawayCards = [
 ];
 
 const fanStyles = [
-  { transform: "translate(-50%, 16px) rotate(-18deg)", zIndex: 1 },
-  { transform: "translate(-50%, 4px) rotate(-9deg)", zIndex: 2 },
-  { transform: "translate(-50%, -8px) rotate(0deg)", zIndex: 5 },
-  { transform: "translate(-50%, 4px) rotate(9deg)", zIndex: 3 },
-  { transform: "translate(-50%, 16px) rotate(18deg)", zIndex: 2 },
+  { transform: "translate(calc(-50% - 108px), 24px) rotate(-18deg)", zIndex: 1 },
+  { transform: "translate(calc(-50% - 54px), 8px) rotate(-9deg)", zIndex: 2 },
+  { transform: "translate(-50%, -4px) rotate(0deg)", zIndex: 3 },
+  { transform: "translate(calc(-50% + 54px), 8px) rotate(9deg)", zIndex: 2 },
+  { transform: "translate(calc(-50% + 108px), 24px) rotate(18deg)", zIndex: 1 },
 ];
 
 export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolean }) {
@@ -42,7 +42,7 @@ export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolea
             {giveawayCards.map((card, index) => (
               <div
                 key={card.name}
-                className="absolute left-1/2 top-0 w-[112px] overflow-hidden rounded-[10px] border-2 border-zinc-300 bg-zinc-500 p-[3px] shadow-[0_12px_28px_rgba(0,0,0,.55)] sm:w-[150px] sm:rounded-xl sm:p-1"
+                className="absolute left-1/2 top-0 w-[104px] overflow-hidden rounded-[10px] border-2 border-zinc-300 bg-zinc-500 p-[3px] shadow-[0_12px_28px_rgba(0,0,0,.55)] sm:w-[140px] sm:rounded-xl sm:p-1"
                 style={fanStyles[index]}
               >
                 <div className="rounded-[6px] border border-zinc-700 bg-white p-[2px] sm:rounded-lg sm:p-1">
