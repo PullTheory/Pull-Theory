@@ -6,6 +6,7 @@ create table if not exists public.collector_showcases (
  bio text not null default '' check (length(bio) <= 500),
  favorite_pokemon text not null default '' check (length(favorite_pokemon) <= 80),
  favorite_card text not null default '' check (length(favorite_card) <= 120),
+ favorite_card_image_url text check (favorite_card_image_url is null or favorite_card_image_url ~ '^https?://'),
  completed_sets text[] not null default '{}'::text[],
  hunting_for text[] not null default '{}'::text[],
  is_public boolean not null default true,
