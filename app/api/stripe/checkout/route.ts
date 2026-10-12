@@ -11,10 +11,12 @@ export async function POST(request: Request) {
     const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
     const body = await request.json();
     const requestedPlan: unknown = body?.plan;
+    const welcomeOffer = body?.welcomeOffer === true;
     if (!token || !isPaidPlan(requestedPlan)) return NextResponse.json({ error: "Please sign in and choose a paid membership." }, { status: 401 });
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: "Account service is not configured." }, { status: 503 });
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data, error } = await supabase.auth.getUser(token);
@@ -24,17 +26,30 @@ export async function POST(request: Request) {
     const priceId = process.env[plan.priceEnv];
     if (!priceId) return NextResponse.json({ error: "Payments are not configured yet. Please try again shortly." }, { status: 503 });
 
+    let discountId: string | undefined;
+    if (welcomeOffer) {
+      if (!serviceKey) return NextResponse.json({ error: "The Welcome Rip offer is not configured." }, { status: 503 });
+      const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+      const { data: claim } = await admin.from("welcome_rip_claims").select("id").eq("user_id", data.user.id).maybeSingle();
+      if (!claim) return NextResponse.json({ error: "Open your Welcome Rip before using this offer." }, { status: 403 });
+      const stripe = getStripe();
+      const couponId = "pulltheory-welcome-rip-799";
+      try { await stripe.coupons.retrieve(couponId); } catch { await stripe.coupons.create({ id: couponId, name: "Welcome Rip $7.99 Membership", amount_off: 200, currency: "usd", duration: "forever" }); }
+      discountId = couponId;
+    }
+
     const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "https://pulltheorytrade.com";
     const session = await getStripe().checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
+      ...(discountId ? { discounts: [{ coupon: discountId }] } : {}),
       success_url: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/#pricing`,
       client_reference_id: data.user.id,
       customer_email: data.user.email,
-      metadata: { user_id: data.user.id, plan: requestedPlan, credits: String(plan.credits) },
-      subscription_data: { metadata: { user_id: data.user.id, plan: requestedPlan, credits: String(plan.credits) } },
-      allow_promotion_codes: true,
+      metadata: { user_id: data.user.id, plan: requestedPlan, credits: String(plan.credits), ...(welcomeOffer ? { welcome_rip_offer: "7.99" } : {}) },
+      subscription_data: { metadata: { user_id: data.user.id, plan: requestedPlan, credits: String(plan.credits), ...(welcomeOffer ? { welcome_rip_offer: "7.99" } : {}) } },
+      allow_promotion_codes: !discountId,
     });
 
     return NextResponse.json({ url: session.url });
