@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const giveawayCards = [
-  { name: "Pikachu", grade: "PSA 10", image: "https://images.pokemontcg.io/svp/242_hires.png" },
+  { name: "Pikachu", grade: "PSA 10", image: "https://static.tcgcollector.com/content/images/2a/24/4a/2a244a268957ff780a18249ba4edab432e37ce3f16e415e49aa7a0601f29ac58.webp" },
   { name: "Swablu", grade: "PSA 9", image: "https://images.pokemontcg.io/swsh12pt5gg/GG27_hires.png" },
   { name: "Giovanni's Exile (Full Art)", grade: "PSA 9", image: "https://images.pokemontcg.io/sm115/67_hires.png" },
-  { name: "Iono's Kilowattrel", grade: "PSA 8", image: "https://images.pokemontcg.io/sv09/163_hires.png" },
+  { name: "Iono's Kilowattrel", grade: "PSA 8", image: "https://static.tcgcollector.com/content/images/ba/01/02/ba010257f52ea148acc1bb003a6a855babe006032b4b2f729a28cf3b7ce1c78b.webp" },
   { name: "Team Rocket's Orbeetle", grade: "PSA 9", image: "https://images.pokemontcg.io/sv10/198_hires.png" },
 ];
 
