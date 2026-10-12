@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 const giveawayCards = [
-  "Pikachu — PSA 10",
-  "Swablu — PSA 9",
-  "Giovanni's Exile (Full Art) — PSA 9",
-  "Iono's Kilowattrel — PSA 8",
-  "Team Rocket's Orbeetle — PSA 9",
+  { name: "Pikachu", grade: "PSA 10", image: "https://images.pokemontcg.io/svp/242_hires.png" },
+  { name: "Swablu", grade: "PSA 9", image: "https://images.pokemontcg.io/swsh12pt5gg/GG27_hires.png" },
+  { name: "Giovanni's Exile (Full Art)", grade: "PSA 9", image: "https://images.pokemontcg.io/sm115/67_hires.png" },
+  { name: "Iono's Kilowattrel", grade: "PSA 8", image: "https://images.pokemontcg.io/sv09/163_hires.png" },
+  { name: "Team Rocket's Orbeetle", grade: "PSA 9", image: "https://images.pokemontcg.io/sv10/198_hires.png" },
 ];
 
 export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolean }) {
@@ -29,17 +29,26 @@ export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolea
           View Membership
         </Link>
 
-        <div className="mx-auto mt-8 flex max-w-3xl justify-center rounded-2xl px-2 py-2 sm:mt-10 sm:px-8">
-          <img
-            src="/giveaway-slabs.svg"
-            alt="All five PSA graded Pokémon cards included in the Pull Theory membership giveaway"
-            className="h-auto w-full max-w-3xl object-contain"
-          />
+        <div className="mx-auto mt-8 grid max-w-3xl grid-cols-3 gap-3 px-1 sm:mt-10 sm:gap-5 sm:px-4">
+          {giveawayCards.map((card, index) => (
+            <div
+              key={card.name}
+              className={`rounded-xl border border-white/50 bg-zinc-300 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,.35)] ${index >= 3 ? "col-span-1" : ""}`}
+            >
+              <div className="rounded-lg border-2 border-red-600 bg-white p-1">
+                <div className="flex items-center justify-between px-1 pb-1 text-[8px] font-black uppercase text-black sm:text-[10px]">
+                  <span>{card.grade === "PSA 10" ? "GEM MT" : card.grade === "PSA 8" ? "NM-MT" : "MINT"}</span>
+                  <span className="text-sm sm:text-base">{card.grade.replace("PSA ", "")}</span>
+                </div>
+                <img src={card.image} alt={`${card.name} ${card.grade}`} className="aspect-[3/4] w-full rounded object-cover" />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="mx-auto mt-5 grid max-w-2xl gap-2 text-center text-sm font-bold leading-6 text-zinc-100 sm:text-base">
           {giveawayCards.map((card) => (
-            <p key={card}>{card}</p>
+            <p key={card.name}>{card.name} — {card.grade}</p>
           ))}
         </div>
 
