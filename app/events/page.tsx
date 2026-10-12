@@ -35,8 +35,8 @@ export default function CommunityEventsPage() {
   if (!error && data) setEntries(data as Entry[]);
   if (leaderData) setLeaders(leaderData as Leader[]);
   if (user) {
-    const {data:mine} = await client.from("community_appreciations").select("entry_id").eq("giver_id",user.id);
-    if (mine) setAppreciated(mine.map((item:{entry_id:string})=>item.entry_id));
+    const {data:mine} = await client.from("community_appreciations").select("recipient_id").eq("giver_id",user.id);
+    if (mine) setAppreciated(mine.map((item:{recipient_id:string})=>item.recipient_id));
   }
   setLoading(false);
  }
@@ -44,7 +44,7 @@ export default function CommunityEventsPage() {
  async function appreciate(entry:Entry) {
   if(!userId){setMessage("Sign in to recognize a helpful collector.");return;}
   if(entry.user_id===userId){setMessage("You can’t appreciate your own entry.");return;}
-  if(appreciated.includes(entry.id)){setMessage("You’ve already used your appreciation for this collector this week.");return;}
+  if(appreciated.includes(entry.user_id)){setMessage("You’ve already used your appreciation for this collector this week.");return;}
   const client=getSupabaseClient(); if(!client)return;
   const {error}=await client.from("community_appreciations").insert({giver_id:userId,recipient_id:entry.user_id,entry_id:entry.id});
   if(error){setMessage(error.code==="23505"?"You’ve already appreciated this collector this week.":"Could not send appreciation. Sign in and try again.");return;}
