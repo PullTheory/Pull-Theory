@@ -8,9 +8,12 @@ const events = [
  { slug:"weekly-binder-showcase", tag:"Show & tell", title:"Binder Showcase", prompt:"Show one page, one favorite card, or a small part of your collection. Tell the community what makes it special.", reward:"Community feature", action:"Show your binder" },
  { slug:"weekly-trade-challenge", tag:"Trade challenge", title:"Good-Faith Trade Challenge", prompt:"Share a card you’d be happy to trade and what you’re hoping to find. Keep condition and expectations clear, and celebrate helpful, respectful trading.", reward:"Helpful collector spotlight", action:"Join the challenge" },
 ];
-type Entry = { id:string; event_slug:string; entry_title:string; entry_text:string; card_image_url:string|null; is_public:boolean; completed:boolean; created_at:string; user_id:string };\ntype Leader = { username:string; display_name:string; points:number };
+type Entry = { id:string; event_slug:string; entry_title:string; entry_text:string; card_image_url:string|null; is_public:boolean; completed:boolean; created_at:string; user_id:string };
+type Leader = { username:string; display_name:string; points:number };
 export default function CommunityEventsPage() {
- const [entries,setEntries] = useState<Entry[]>([]);\n const [leaders,setLeaders] = useState<Leader[]>([]);\n const [appreciated,setAppreciated] = useState<string[]>([]);
+ const [entries,setEntries] = useState<Entry[]>([]);
+ const [leaders,setLeaders] = useState<Leader[]>([]);
+ const [appreciated,setAppreciated] = useState<string[]>([]);
  const [userId,setUserId] = useState<string|null>(null);
  const [loading,setLoading] = useState(true);
  const [message,setMessage] = useState("");
@@ -32,7 +35,16 @@ export default function CommunityEventsPage() {
   setLoading(false);
  }
  useEffect(()=>{ void load(); },[]);
- async function appreciate(entry:Entry) {\n  if(!userId){setMessage("Sign in to recognize a helpful collector.");return;}\n  if(entry.user_id===userId){setMessage("You can’t appreciate your own entry.");return;}\n  if(appreciated.includes(entry.id)){setMessage("You’ve already used your appreciation for this collector this week.");return;}\n  const client=getSupabaseClient(); if(!client)return;\n  const {error}=await client.from("community_appreciations").insert({giver_id:userId,recipient_id:entry.user_id,entry_id:entry.id});\n  if(error){setMessage(error.code==="23505"?"You’ve already appreciated this collector this week.":"Could not send appreciation. Sign in and try again.");return;}\n  setAppreciated(old=>[...old,entry.id]);setMessage("Appreciation sent — thanks for encouraging a helpful collector!");await load();\n }\n async function submit(e:React.FormEvent<HTMLFormElement>) {
+ async function appreciate(entry:Entry) {
+  if(!userId){setMessage("Sign in to recognize a helpful collector.");return;}
+  if(entry.user_id===userId){setMessage("You can’t appreciate your own entry.");return;}
+  if(appreciated.includes(entry.id)){setMessage("You’ve already used your appreciation for this collector this week.");return;}
+  const client=getSupabaseClient(); if(!client)return;
+  const {error}=await client.from("community_appreciations").insert({giver_id:userId,recipient_id:entry.user_id,entry_id:entry.id});
+  if(error){setMessage(error.code==="23505"?"You’ve already appreciated this collector this week.":"Could not send appreciation. Sign in and try again.");return;}
+  setAppreciated(old=>[...old,entry.id]);setMessage("Appreciation sent — thanks for encouraging a helpful collector!");await load();
+ }
+ async function submit(e:React.FormEvent<HTMLFormElement>) {
   e.preventDefault(); setMessage(""); setSaving(true);
   const token = await getCurrentAccessToken();
   if (!token || !userId) { setMessage("Sign in first, then you can post your event entry."); setSaving(false); return; }
