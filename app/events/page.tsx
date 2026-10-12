@@ -38,10 +38,10 @@ export default function CommunityEventsPage() {
   if (!token || !userId) { setMessage("Sign in first, then you can post your event entry."); setSaving(false); return; }
   const client = getSupabaseClient();
   if (!client) { setMessage("Community posts are temporarily unavailable."); setSaving(false); return; }
-  const {error} = await client.from("community_event_entries").upsert({
+  const {error} = await client.from("community_event_entries").insert({
     user_id:userId,event_slug:active,entry_title:title.trim(),entry_text:body.trim(),
     card_image_url:image.trim() || null,is_public:publicEntry,updated_at:new Date().toISOString()
-  },{onConflict:"user_id,event_slug"});
+  });
   if (error) setMessage("Could not save your entry. Please try again in a moment.");
   else { setMessage("Your entry is saved. Thanks for taking part!"); setTitle(""); setBody(""); setImage(""); await load(); }
   setSaving(false);
