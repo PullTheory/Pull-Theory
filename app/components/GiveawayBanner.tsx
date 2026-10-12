@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 const giveawayCards = [
-  "Pikachu — PSA 10",
-  "Swablu — PSA 9",
-  "Giovanni's Exile (Full Art) — PSA 9",
-  "Iono's Kilowattrel — PSA 8",
-  "Team Rocket's Orbeetle — PSA 9",
+  { name: "Pikachu", grade: "PSA 10", image: "https://images.pokemontcg.io/svp/214_hires.png" },
+  { name: "Swablu", grade: "PSA 9", image: "https://images.pokemontcg.io/swsh12pt5gg/GG27_hires.png" },
+  { name: "Giovanni's Exile (Full Art)", grade: "PSA 9", image: "https://images.pokemontcg.io/sm115/67_hires.png" },
+  { name: "Iono's Kilowattrel", grade: "PSA 8", image: "https://images.pokemontcg.io/sv09/163_hires.png" },
+  { name: "Team Rocket's Orbeetle", grade: "PSA 9", image: "https://images.pokemontcg.io/sv10/198_hires.png" },
 ];
 
 export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolean }) {
@@ -30,16 +30,24 @@ export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolea
         </Link>
 
         <div className="mx-auto mt-8 max-w-3xl px-1 sm:mt-10 sm:px-8">
-          <img
-            src="/giveaway-slabs.jpg"
-            alt="All five PSA graded Pokémon cards included in the Pull Theory membership giveaway"
-            className="mx-auto h-auto w-full max-w-2xl object-contain"
-          />
+          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+            {giveawayCards.map((card) => (
+              <div key={card.name} className="overflow-hidden rounded-xl border border-white/40 bg-zinc-200 p-1 shadow-[0_8px_24px_rgba(0,0,0,.35)]">
+                <img
+                  src={card.image}
+                  alt={`${card.name} ${card.grade}`}
+                  loading="eager"
+                  decoding="async"
+                  className="block h-auto w-full rounded-lg"
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mx-auto mt-5 grid max-w-2xl gap-2 text-center text-sm font-bold leading-6 text-zinc-100 sm:text-base">
           {giveawayCards.map((card) => (
-            <p key={card}>{card}</p>
+            <p key={card.name}>{card.name} — {card.grade}</p>
           ))}
         </div>
 
