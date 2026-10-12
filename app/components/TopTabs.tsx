@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { getCurrentAccessToken } from "../lib/supabase";
 
 const primaryTabs = [
-  { label: "Shopping", href: "/marketplace/browse", match: "/marketplace" },
+  { label: "Marketplace", href: "/marketplace/browse", match: "/marketplace" },
   { label: "Trading", href: "/offers", match: "/offers" },
   { label: "My Collection", href: "/portfolio", match: "/portfolio" },
   { label: "Community", href: "/events", match: "/events" },
