@@ -26,12 +26,18 @@ export default function CommunityEventsPage() {
  async function load() {
   const client = getSupabaseClient();
   if (!client) { setLoading(false); return; }
-  const [{data:{user}}, {data,error}] = await Promise.all([
+  const [{data:{user}}, {data,error}, {data:leaderData}] = await Promise.all([
     client.auth.getUser(),
-    client.from("community_event_entries").select("id,event_slug,entry_title,entry_text,card_image_url,is_public,completed,created_at,user_id").eq("is_public",true).order("created_at",{ascending:false}).limit(40)
+    client.from("community_event_entries").select("id,event_slug,entry_title,entry_text,card_image_url,is_public,completed,created_at,user_id").eq("is_public",true).order("created_at",{ascending:false}).limit(40),
+    client.from("collector_reward_leaderboard").select("username,display_name,points").order("points",{ascending:false}).limit(10)
   ]);
   setUserId(user?.id ?? null);
   if (!error && data) setEntries(data as Entry[]);
+  if (leaderData) setLeaders(leaderData as Leader[]);
+  if (user) {
+    const {data:mine} = await client.from("community_appreciations").select("entry_id").eq("giver_id",user.id);
+    if (mine) setAppreciated(mine.map((item:{entry_id:string})=>item.entry_id));
+  }
   setLoading(false);
  }
  useEffect(()=>{ void load(); },[]);
