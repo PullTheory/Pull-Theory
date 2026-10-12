@@ -1,11 +1,19 @@
 import Link from "next/link";
 
 const giveawayCards = [
-  { name: "Pikachu", grade: "PSA 10", image: "https://images.pokemontcg.io/svp/214_hires.png" },
+  { name: "Pikachu", grade: "PSA 10", image: "https://images.pokemontcg.io/svp/242_hires.png" },
   { name: "Swablu", grade: "PSA 9", image: "https://images.pokemontcg.io/swsh12pt5gg/GG27_hires.png" },
   { name: "Giovanni's Exile (Full Art)", grade: "PSA 9", image: "https://images.pokemontcg.io/sm115/67_hires.png" },
   { name: "Iono's Kilowattrel", grade: "PSA 8", image: "https://images.pokemontcg.io/sv09/163_hires.png" },
   { name: "Team Rocket's Orbeetle", grade: "PSA 9", image: "https://images.pokemontcg.io/sv10/198_hires.png" },
+];
+
+const fanStyles = [
+  { transform: "translate(-50%, 16px) rotate(-18deg)", zIndex: 1 },
+  { transform: "translate(-50%, 4px) rotate(-9deg)", zIndex: 2 },
+  { transform: "translate(-50%, -8px) rotate(0deg)", zIndex: 5 },
+  { transform: "translate(-50%, 4px) rotate(9deg)", zIndex: 3 },
+  { transform: "translate(-50%, 16px) rotate(18deg)", zIndex: 2 },
 ];
 
 export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolean }) {
@@ -29,23 +37,32 @@ export default function GiveawayBanner({ signedIn = false }: { signedIn?: boolea
           View Membership
         </Link>
 
-        <div className="mx-auto mt-8 max-w-3xl px-1 sm:mt-10 sm:px-8">
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
-            {giveawayCards.map((card) => (
-              <div key={card.name} className="overflow-hidden rounded-xl border border-white/40 bg-zinc-200 p-1 shadow-[0_8px_24px_rgba(0,0,0,.35)]">
-                <img
-                  src={card.image}
-                  alt={`${card.name} ${card.grade}`}
-                  loading="eager"
-                  decoding="async"
-                  className="block h-auto w-full rounded-lg"
-                />
+        <div className="mx-auto mt-8 h-[250px] w-full max-w-[620px] sm:mt-10 sm:h-[330px]" aria-label="Five PSA graded Pokémon cards">
+          <div className="relative mx-auto h-full w-full max-w-[520px]">
+            {giveawayCards.map((card, index) => (
+              <div
+                key={card.name}
+                className="absolute left-1/2 top-0 w-[112px] overflow-hidden rounded-[10px] border-2 border-zinc-300 bg-zinc-500 p-[3px] shadow-[0_12px_28px_rgba(0,0,0,.55)] sm:w-[150px] sm:rounded-xl sm:p-1"
+                style={fanStyles[index]}
+              >
+                <div className="rounded-[6px] border border-zinc-700 bg-white p-[2px] sm:rounded-lg sm:p-1">
+                  <img
+                    src={card.image}
+                    alt={`${card.name} ${card.grade}`}
+                    loading="eager"
+                    decoding="async"
+                    className="block h-auto w-full rounded-[4px] object-cover sm:rounded-md"
+                  />
+                </div>
+                <div className="flex items-center justify-between px-1 py-1 text-[9px] font-black uppercase tracking-tight text-white sm:px-2 sm:py-1.5 sm:text-[11px]">
+                  <span>PSA</span><span>{card.grade.replace("PSA ", "")}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mx-auto mt-5 grid max-w-2xl gap-2 text-center text-sm font-bold leading-6 text-zinc-100 sm:text-base">
+        <div className="mx-auto mt-2 grid max-w-2xl gap-2 text-center text-sm font-bold leading-6 text-zinc-100 sm:text-base">
           {giveawayCards.map((card) => (
             <p key={card.name}>{card.name} — {card.grade}</p>
           ))}
