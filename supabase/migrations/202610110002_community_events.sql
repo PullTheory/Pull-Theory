@@ -9,9 +9,10 @@ create table if not exists public.community_event_entries (
  completed boolean not null default false,
  created_at timestamptz not null default now(),
  updated_at timestamptz not null default now(),
- unique (user_id,event_slug),
+
  check (length(event_slug) between 3 and 100)
-);
+ );
+alter table public.community_event_entries drop constraint if exists community_event_entries_user_id_event_slug_key;
 alter table public.community_event_entries enable row level security;
 drop policy if exists "Public event entries and own entries are visible" on public.community_event_entries;
 create policy "Public event entries and own entries are visible" on public.community_event_entries for select to anon, authenticated using (is_public = true or user_id = (select auth.uid()));
