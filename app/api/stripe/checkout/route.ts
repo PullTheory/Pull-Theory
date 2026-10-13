@@ -5,6 +5,16 @@ import { isPaidPlan, paidPlans } from "../../../lib/stripePlans";
 
 export const runtime = "nodejs";
 
+async function resolvePriceId(configuredId: string) {
+  if (configuredId.startsWith("price_")) return configuredId;
+  if (!configuredId.startsWith("prod_")) return configuredId;
+  const product = await getStripe().products.retrieve(configuredId);
+  const defaultPrice = product.default_price;
+  const priceId = typeof defaultPrice === "string" ? defaultPrice : defaultPrice?.id;
+  if (!priceId) throw new Error("This membership is missing a Stripe recurring price.");
+  return priceId;
+}
+
 export async function POST(request: Request) {
   try {
     const authorization = request.headers.get("authorization") ?? "";
@@ -23,8 +33,9 @@ export async function POST(request: Request) {
     if (error || !data.user) return NextResponse.json({ error: "Your sign-in session has expired." }, { status: 401 });
 
     const plan = paidPlans[requestedPlan];
-    const priceId = process.env[plan.priceEnv];
-    if (!priceId) return NextResponse.json({ error: "Payments are not configured yet. Please try again shortly." }, { status: 503 });
+    const configuredPriceId = process.env[plan.priceEnv];
+    if (!configuredPriceId) return NextResponse.json({ error: "Payments are not configured yet. Please try again shortly." }, { status: 503 });
+    const priceId = await resolvePriceId(configuredPriceId);
 
     let discountId: string | undefined;
     if (welcomeOffer) {
@@ -54,6 +65,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to start checkout." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unable to start checkout.";
+    console.error("[stripe/checkout]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
