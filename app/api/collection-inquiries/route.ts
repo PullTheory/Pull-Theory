@@ -5,9 +5,17 @@ export const runtime = "nodejs";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const recentSubmissions = new Map<string, number[]>();
+const NO_STORE = { "Cache-Control": "no-store" };
 
 function overLimit(key: string) {
   const now = Date.now();
+  if (recentSubmissions.size > 1000) {
+    for (const [address, times] of recentSubmissions) {
+      const fresh = times.filter((time) => now - time < 60 * 60 * 1000);
+      if (fresh.length) recentSubmissions.set(address, fresh);
+      else recentSubmissions.delete(address);
+    }
+  }
   const recent = (recentSubmissions.get(key) ?? []).filter((time) => now - time < 60 * 60 * 1000);
   if (recent.length >= 5) return true;
   recent.push(now);
@@ -17,21 +25,23 @@ function overLimit(key: string) {
 
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    if (overLimit(ip)) {
-      return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429, headers: { "Cache-Control": "no-store" } });
-    }
-    const contentLength = Number(request.headers.get("content-length") || 0);
-    if (contentLength > 20000) {
-      return NextResponse.json({ error: "Submission is too large. Please shorten the details and try again." }, { status: 413, headers: { "Cache-Control": "no-store" } });
-    }
-    const body = await request.json();
-    if (typeof body?.website === "string" && body.website.trim()) {
-      return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+    if (!request.headers.get("content-type")?.toLowerCase().includes("application/json")) {
+      return NextResponse.json({ error: "Please submit the form using the website." }, { status: 415, headers: NO_STORE });
     }
 
-    const name = String(body?.name ?? "").replace(/[\r\n]+/g, " ").trim().slice(0, 100);
-    const email = String(body?.email ?? "").trim().slice(0, 160);
+    const body = await request.json();
+    // Quiet honeypot: bots receive a success response without triggering email.
+    if (typeof body?.website === "string" && body.website.trim()) {
+      return NextResponse.json({ ok: true }, { headers: NO_STORE });
+    }
+
+    const ip = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (overLimit(ip)) {
+      return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429, headers: NO_STORE });
+    }
+
+    const name = String(body?.name ?? "").trim().replace(/\s+/g, " ").slice(0, 100);
+    const email = String(body?.email ?? "").trim().toLowerCase().slice(0, 160);
     const phone = String(body?.phone ?? "").trim().slice(0, 50);
     const location = String(body?.location ?? "").trim().slice(0, 120);
     const size = String(body?.size ?? "").trim().slice(0, 80);
@@ -43,7 +53,7 @@ export async function POST(request: Request) {
       : [];
 
     if (name.length < 2 || !EMAIL.test(email) || size.length < 2 || details.length < 20 || body?.agree !== true) {
-      return NextResponse.json({ error: "Please complete your name, valid email, collection size, details, and consent." }, { status: 400, headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({ error: "Please complete your name, valid email, collection size, details, and consent." }, { status: 400, headers: NO_STORE });
     }
 
     const recipient = process.env.COLLECTION_INQUIRY_EMAIL || "PullTheory@gmail.com";
@@ -64,13 +74,15 @@ export async function POST(request: Request) {
       "",
       photos.length ? `Photo links:\n${photos.join("\n")}` : "No photo links provided.",
       "",
-      "Do not promise a price or accept custody of cards until the owner has received and agreed to written terms.",
+      "This is an inquiry only. Do not promise a price or accept custody of cards until the owner has received and agreed to written terms.",
     ].join("\n");
 
     const sent = await sendNotification(recipient, subject, message);
     if (!sent) {
-      return NextResponse.json({ error: "The inquiry email service is not configured yet. Please email PullTheory@gmail.com directly instead." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({ error: "The inquiry email service is not configured yet. Please email PullTheory@gmail.com directly instead." }, { status: 503, headers: NO_STORE });
     }
+
+    // Send a simple receipt to the address supplied by the collector.
     try {
       await sendNotification(
         email,
@@ -87,9 +99,10 @@ https://pulltheorytrade.com`
     } catch (confirmationError) {
       console.error("[collection-inquiry] confirmation email failed", confirmationError);
     }
-    return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+
+    return NextResponse.json({ ok: true }, { headers: NO_STORE });
   } catch (error) {
     console.error("[collection-inquiry] submission failed", error);
-    return NextResponse.json({ error: "We couldn't send your inquiry. Please try again or contact PullTheory directly." }, { status: 500, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "We couldn't send your inquiry. Please try again or contact PullTheory directly." }, { status: 500, headers: NO_STORE });
   }
 }
