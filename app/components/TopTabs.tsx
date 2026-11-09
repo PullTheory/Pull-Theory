@@ -15,6 +15,7 @@ const primaryTabs = [
 ];
 
 const moreTabs = [
+  { label: "Shop Shopify Store", href: "/shopify", match: "/shopify" },
   { label: "Collector Guides", href: "/guides", match: "/guides" },
   { label: "My Collection", href: "/portfolio", match: "/portfolio" },
   { label: "Want List", href: "/wants", match: "/wants" },
@@ -55,6 +56,7 @@ export default function TopTabs() {
   }, []);
 
   const adminTabs = canUsePullShield ? [
+    { label: "Traffic & Analytics", href: "/pullshield#traffic", match: "/pullshield" },
     { label: "Referral Admin", href: "/admin/referrals", match: "/admin/referrals" },
     { label: "PullShield Desk", href: "/pullshield", match: "/pullshield" },
     { label: "PullShield Verify", href: "/pullshield/authentication", match: "/pullshield/authentication" },
