@@ -44,7 +44,7 @@ export default function CollectionSellingPage() {
 
       <form onSubmit={submit} className="mt-6 rounded-[2rem] border border-white/10 bg-white/[.035] p-6 sm:p-10">
         <h2 className="text-2xl font-black">Tell us about your collection</h2>
-        <p className="mt-2 text-sm leading-6 text-zinc-400">No payment, shipping, or commitment is required to submit this inquiry.</p>
+        <p className="mt-2 text-sm leading-6 text-zinc-400">No payment, shipping, or commitment is required to submit this inquiry. Your answers and any photo links you provide are emailed to PullTheory so we can review and respond; do not include passwords, payment details, or sensitive personal information.</p>
         <div className="mt-7 grid gap-5 sm:grid-cols-2">
           <label className={label}>Your name<input className={field} required minLength={2} maxLength={100} autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Name" /></label>
           <label className={label}>Email address<input className={field} required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="you@example.com" /></label>
