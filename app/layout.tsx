@@ -14,13 +14,13 @@ export const metadata: Metadata = {
   description: "Buy, sell, and trade Pokémon cards with the PullTheory collector community.",
   icons: { icon: [{ url: "/logo.png", type: "image/png" }], apple: [{ url: "/logo.png", type: "image/png" }] },
   openGraph: {
-    title: "Pull Theory HQ",
-    description: "The home for serious collectors.",
+    title: "PullTheory | Pokémon Card Marketplace",
+    description: "Buy, sell, and trade Pokémon cards with the PullTheory collector community.",
     url: "/",
     siteName: "PullTheory",
     images: [{ url: "/logo.png", width: 1000, height: 1000, alt: "Pull Theory HQ" }],
   },
-  twitter: { card: "summary_large_image", title: "Pull Theory HQ", description: "The home for serious collectors.", images: ["/logo.png"] },
+  twitter: { card: "summary_large_image", title: "PullTheory | Pokémon Card Marketplace", description: "Buy, sell, and trade Pokémon cards with the PullTheory collector community.", images: ["/logo.png"] },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
