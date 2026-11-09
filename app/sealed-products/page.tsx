@@ -23,7 +23,7 @@ export default function SealedProductsPage() {
           <p className="text-xs font-extrabold uppercase tracking-[.22em] text-sky-300">PullTheoryTrade · sealed shop</p>
           <h1 className="mt-3 text-3xl font-black sm:text-5xl">Shop Pokémon sealed products</h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">Choose the product type you are hunting for, then browse current retailer listings. Always confirm the exact set, language, box configuration, seller, condition, and shipping before checkout.</p>
-          <a href={storeUrl} target="_blank" rel="noopener noreferrer sponsored" className="mt-7 inline-flex rounded-xl bg-sky-400 px-6 py-3.5 text-sm font-extrabold text-slate-950 hover:bg-sky-300">Browse current eBay listings ↗</a>
+          <div className="mt-7 flex flex-wrap justify-center gap-3"><Link href="/shopify" className="inline-flex rounded-xl bg-violet-300 px-6 py-3.5 text-sm font-extrabold text-slate-950 hover:bg-violet-200">Shop direct with PullTheory ↗</Link><a href={storeUrl} target="_blank" rel="noopener noreferrer sponsored" className="inline-flex rounded-xl bg-sky-400 px-6 py-3.5 text-sm font-extrabold text-slate-950 hover:bg-sky-300">Browse eBay marketplace ↗</a></div>
         </section>
         <section id="categories" className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map(([name, description, cta, url], index) => (
