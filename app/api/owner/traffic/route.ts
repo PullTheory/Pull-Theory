@@ -15,11 +15,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Owner access required." }, { status: 403 });
     }
 
-    const [traffic, signups, lifecycle] = await Promise.all([
+    const [trafficResult, signupsResult, lifecycleResult] = await Promise.allSettled([
       getTrafficSummary(),
       getSignupSummary(),
       getLifecycleSummary(),
     ]);
+    if (trafficResult.status === "rejected") throw trafficResult.reason;
+    const traffic = trafficResult.value;
+    const signups = signupsResult.status === "fulfilled" ? signupsResult.value : null;
+    const lifecycle = lifecycleResult.status === "fulfilled" ? lifecycleResult.value : null;
     if (!traffic) {
       return NextResponse.json({
         error: "Traffic storage is not connected. Check the Supabase URL and service-role environment variables in Vercel.",
