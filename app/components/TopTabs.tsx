@@ -17,6 +17,7 @@ const moreTabs = [
   { label: "PullMatches", href: "/matches", match: "/matches" },
   { label: "Collector Showcase", href: "/collector-showcase", match: "/collector-showcase" },
   { label: "Guides", href: "/guides", match: "/guides" },
+  { label: "Pokémon Deals", href: "/deals", match: "/deals" },
   { label: "Seller Center", href: "/seller", match: "/seller" },
   { label: "Membership", href: "/pricing", match: "/pricing" },
   { label: "Ambassadors", href: "/ambassadors", match: "/ambassadors" },
