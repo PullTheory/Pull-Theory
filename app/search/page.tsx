@@ -101,6 +101,27 @@ const sampleCards: CardResult[] = [
   },
 ];
 
+function getMarketplaceSearches(card: CardResult) {
+  const searchTerms = [card.name, card.set, card.card_number ? `#${card.card_number}` : ""]
+    .filter(Boolean)
+    .join(" ");
+  const ebay = new URL("https://www.ebay.com/sch/i.html");
+  ebay.searchParams.set("_nkw", searchTerms);
+  ebay.searchParams.set("mkcid", "1");
+  ebay.searchParams.set("mkrid", "711-53200-19255-0");
+  ebay.searchParams.set("toolid", "20023");
+  ebay.searchParams.set("campid", "5339243819");
+  ebay.searchParams.set("customid", "PullTheoryTrade");
+  ebay.searchParams.set("siteid", "0");
+  ebay.searchParams.set("mkevt", "1");
+
+  const tcgplayer = new URL("https://www.tcgplayer.com/search/pokemon/product");
+  tcgplayer.searchParams.set("productLineName", "pokemon");
+  tcgplayer.searchParams.set("q", searchTerms);
+
+  return { ebay: ebay.toString(), tcgplayer: tcgplayer.toString() };
+}
+
 export default function SearchPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -438,6 +459,29 @@ export default function SearchPage() {
                     </span>
                   </div>
                   <p className="text-sm leading-6 text-zinc-400">Current market estimate: {card.price}</p>
+                  {(() => {
+                    const marketplaces = getMarketplaceSearches(card);
+                    return (
+                      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                        <a
+                          href={marketplaces.ebay}
+                          target="_blank"
+                          rel="sponsored noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-black transition hover:bg-amber-300"
+                        >
+                          Find listings on eBay
+                        </a>
+                        <a
+                          href={marketplaces.tcgplayer}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-2xl border border-violet-300/40 px-4 py-3 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/15"
+                        >
+                          Shop on TCGplayer
+                        </a>
+                      </div>
+                    );
+                  })()}
                   {card.image_url && (
                     <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-black/30">
                       <img src={card.image_url} alt={card.name} className="h-72 w-full object-contain p-3" />
