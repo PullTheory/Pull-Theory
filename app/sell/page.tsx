@@ -29,7 +29,7 @@ export default function SellPage() {
           <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">List Pokémon cards for sale or trade with a collector-focused marketplace. Start with a single card, learn what buyers are looking for, and grow at your own pace.</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/marketplace/new" className="rounded-xl bg-violet-600 px-6 py-4 text-center font-black shadow-lg shadow-violet-950/40 transition hover:bg-violet-500">List a Card</Link>
-            <Link href="/marketplace/browse" className="rounded-xl border border-white/15 bg-white/5 px-6 py-4 text-center font-bold transition hover:bg-white/10">Browse Marketplace</Link><Link href="/seller-calculator" className="rounded-xl border border-violet-300/30 px-6 py-4 text-center font-bold text-violet-200 transition hover:bg-violet-500/10">Calculate Seller Proceeds</Link>
+            <Link href="/marketplace/browse" className="rounded-xl border border-white/15 bg-white/5 px-6 py-4 text-center font-bold transition hover:bg-white/10">Browse Marketplace</Link><Link href="/collection-selling" className="rounded-xl border border-amber-300/25 bg-amber-300/5 px-6 py-4 text-center font-bold text-amber-200 transition hover:bg-amber-300/10">Sell an Entire Collection</Link><Link href="/seller-calculator" className="rounded-xl border border-violet-300/30 px-6 py-4 text-center font-bold text-violet-200 transition hover:bg-violet-500/10">Calculate Seller Proceeds</Link>
           </div>
           <p className="mt-4 text-sm text-zinc-400">Free Collector membership available · No inventory purchase required</p>
         </section>
