@@ -4,14 +4,25 @@ import { sendNotification } from "../../lib/notifications";
 export const runtime = "nodejs";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const recentSubmissions = new Map<string, number[]>();
+
+function overLimit(key: string) {
+  const now = Date.now();
+  const recent = (recentSubmissions.get(key) ?? []).filter((time) => now - time < 60 * 60 * 1000);
+  if (recent.length >= 5) return true;
+  recent.push(now);
+  recentSubmissions.set(key, recent);
+  return false;
+}
 
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";\n    if (overLimit(ip)) return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429, headers: { "Cache-Control": "no-store" } });\n    const body = await request.json();
-    // Quiet honeypot for basic bot filtering.
-    if (typeof body?.website === "string" && body.website.trim()) {
-      return NextResponse.json({ ok: true });
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (overLimit(ip)) {
+      return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429, headers: { "Cache-Control": "no-store" } });
     }
+    const body = await request.json();
+    if (typeof body?.website === "string" && body.website.trim()) return NextResponse.json({ ok: true });
 
     const name = String(body?.name ?? "").trim().slice(0, 100);
     const email = String(body?.email ?? "").trim().slice(0, 160);
@@ -31,7 +42,7 @@ export async function POST(request: Request) {
 
     const recipient = process.env.COLLECTION_INQUIRY_EMAIL || "PullTheory@gmail.com";
     const subject = `New collection-selling inquiry — ${name}`;
-    const text = [
+    const message = [
       "A new PullTheory collection-selling inquiry was submitted.",
       "",
       `Name: ${name}`,
@@ -50,11 +61,11 @@ export async function POST(request: Request) {
       "Do not promise a price or accept custody of cards until the owner has received and agreed to written terms.",
     ].join("\n");
 
-    const sent = await sendNotification(recipient, subject, text);
+    const sent = await sendNotification(recipient, subject, message);
     if (!sent) {
       return NextResponse.json({ error: "The inquiry email service is not configured yet. Please use the contact link below instead." }, { status: 503 });
     }
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("[collection-inquiry] submission failed", error);
     return NextResponse.json({ error: "We couldn't send your inquiry. Please try again or contact PullTheory directly." }, { status: 500 });
