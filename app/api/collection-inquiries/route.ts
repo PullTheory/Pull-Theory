@@ -7,7 +7,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";\n    if (overLimit(ip)) return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429, headers: { "Cache-Control": "no-store" } });\n    const body = await request.json();
     // Quiet honeypot for basic bot filtering.
     if (typeof body?.website === "string" && body.website.trim()) {
       return NextResponse.json({ ok: true });
