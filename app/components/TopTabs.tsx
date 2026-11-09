@@ -6,22 +6,21 @@ import { usePathname } from "next/navigation";
 import { getCurrentAccessToken } from "../lib/supabase";
 
 const primaryTabs = [
-  { label: "Explore", href: "/marketplace/browse", match: "/marketplace" },
-  { label: "Trade Center", href: "/offers", match: "/offers" },
-  { label: "My Collection", href: "/portfolio", match: "/portfolio" },
+  { label: "Home", href: "/", match: "/" },
+  { label: "Sealed Products", href: "/sealed-products", match: "/sealed-products" },
+  { label: "Deals & Restocks", href: "/sealed-products#categories", match: "/deals" },
 ];
 
 const moreTabs = [
+  { label: "Collector Guides", href: "/guides", match: "/guides" },
+  { label: "My Collection", href: "/portfolio", match: "/portfolio" },
+  { label: "Want List", href: "/wants", match: "/wants" },
   { label: "Community & Events", href: "/events", match: "/events" },
-  { label: "My Want List", href: "/wants", match: "/wants" },
-  { label: "PullMatches", href: "/matches", match: "/matches" },
-  { label: "Collector Showcase", href: "/collector-showcase", match: "/collector-showcase" },
-  { label: "Guides & Tips", href: "/guides", match: "/guides" },
-  { label: "Sell a Card", href: "/sell", match: "/sell" },
+  { label: "Trading (community)", href: "/offers", match: "/offers" },
+  { label: "Sell Cards (community)", href: "/sell", match: "/sell" },
   { label: "Sell a Collection", href: "/collection-selling", match: "/collection-selling" },
   { label: "Seller Center", href: "/seller", match: "/seller" },
   { label: "Memberships", href: "/pricing", match: "/pricing" },
-  { label: "Ambassadors", href: "/ambassadors", match: "/ambassadors" },
   { label: "Trust Center", href: "/trust", match: "/trust" },
 ];
 
@@ -42,9 +41,7 @@ export default function TopTabs() {
     return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    setMoreOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMoreOpen(false); }, [pathname]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -66,7 +63,7 @@ export default function TopTabs() {
     <nav aria-label="Main navigation" className="border-t border-white/[.05]">
       <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2.5 sm:px-6">
         {primaryTabs.map((tab) => {
-          const active = pathname.startsWith(tab.match);
+          const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.match);
           return <Link key={tab.href} href={tab.href} aria-current={active ? "page" : undefined} className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold transition sm:text-sm ${active ? "bg-sky-400 text-slate-950 shadow-sm shadow-sky-950/30" : "text-slate-300 hover:bg-white/[.07] hover:text-white"}`}>{tab.label}</Link>;
         })}
         <div className="relative shrink-0">
