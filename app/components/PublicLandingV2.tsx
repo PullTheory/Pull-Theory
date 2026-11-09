@@ -11,7 +11,7 @@ export default function PublicLandingV2(){
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-zinc-200 sm:text-xl">Buy, sell, and trade Pokémon cards with a collector-first community. Find your next chase card, list cards you’re ready to move, and use PullShield tools for supported protected trades.</p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href="/marketplace/browse" className="rounded-2xl bg-violet-600 px-7 py-4 text-center text-lg font-black shadow-[0_14px_40px_rgba(124,58,237,.42)]">Browse Cards</Link>
-            <Link href="/sell" className="rounded-2xl border border-white/15 bg-white/5 px-7 py-4 text-center text-lg font-black hover:bg-white/10">Sell Your Cards</Link>
+            <Link href="/sell" className="rounded-2xl border border-white/15 bg-white/5 px-7 py-4 text-center text-lg font-black hover:bg-white/10">Sell Your Cards</Link><Link href="/collection-selling" className="rounded-2xl border border-amber-300/25 bg-amber-300/5 px-7 py-4 text-center text-lg font-black text-amber-200 hover:bg-amber-300/10">Sell a Collection</Link>
           </div>
           <p className="mt-4 text-sm text-zinc-400">Free to join · No inventory purchase required · You choose which offers to accept</p>
           <p className="mt-5 text-sm text-zinc-400">New to PullTheory? <Link href="/signup" className="font-bold text-amber-300">Create a free account</Link> <span className="px-1">·</span> <Link href="/login" className="font-bold text-amber-300">Log in</Link></p>
