@@ -21,10 +21,13 @@ export async function POST(request: Request) {
     if (overLimit(ip)) {
       return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429, headers: { "Cache-Control": "no-store" } });
     }
-    const contentLength = Number(request.headers.get("content-length") || 0);\n    if (contentLength > 20000) return NextResponse.json({ error: "Submission is too large. Please shorten the details and try again." }, { status: 413, headers: { "Cache-Control": "no-store" } });\n    const body = await request.json();
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > 20000) return NextResponse.json({ error: "Submission is too large. Please shorten the details and try again." }, { status: 413, headers: { "Cache-Control": "no-store" } });
+    const body = await request.json();
     if (typeof body?.website === "string" && body.website.trim()) return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 
-    const name = String(body?.name ?? "").replace(/[\\r\\n]+/g, " ").trim().slice(0, 100);
+    const name = String(body?.name ?? "").replace(/[\\r\
+]+/g, " ").trim().slice(0, 100);
     const email = String(body?.email ?? "").trim().slice(0, 160);
     const phone = String(body?.phone ?? "").trim().slice(0, 50);
     const location = String(body?.location ?? "").trim().slice(0, 120);
@@ -56,10 +59,13 @@ export async function POST(request: Request) {
       "Collection details:",
       details,
       "",
-      photos.length ? `Photo links:\n${photos.join("\n")}` : "No photo links provided.",
+      photos.length ? `Photo links:
+${photos.join("
+")}` : "No photo links provided.",
       "",
       "Do not promise a price or accept custody of cards until the owner has received and agreed to written terms.",
-    ].join("\n");
+    ].join("
+");
 
     const sent = await sendNotification(recipient, subject, message);
     if (!sent) {
