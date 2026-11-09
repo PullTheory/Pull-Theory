@@ -7,14 +7,19 @@ import NotificationBell from "./NotificationBell";
 
 export default function AppHeader() {
   return (
-    <header className="relative border-b border-white/[0.08] bg-[#09090d]/80 shadow-[0_12px_40px_rgba(0,0,0,0.28)] backdrop-blur">
-      <div className="relative flex min-h-20 items-center justify-end px-4">
-        <BackButton />
-        <a href="/" aria-label="Pull Theory HQ home" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-3 text-sm font-semibold uppercase tracking-[0.22em] text-white">
-          <img src="/logo.png" alt="" className="h-11 w-11 rounded-full border border-violet-300/30 object-cover shadow-[0_0_24px_rgba(124,58,237,0.38)]" />
-          <span className="hidden sm:inline">Pull <span className="text-violet-300">Theory</span></span>
-        </a>
-        <div className="flex items-center gap-2"><NotificationBell /><AuthStatus /></div>
+    <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#080f1c]/95 shadow-[0_8px_30px_rgba(0,0,0,.24)] backdrop-blur-xl">
+      <div className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <BackButton />
+          <a href="/" aria-label="PullTheoryTrade home" className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
+            <img src="/logo.png" alt="" className="h-9 w-9 rounded-xl border border-sky-200/20 object-cover shadow-[0_0_20px_rgba(56,189,248,.15)] sm:h-10 sm:w-10" />
+            <span className="hidden text-sm font-black uppercase tracking-[.13em] text-white sm:inline">Pull<span className="text-sky-300">Theory</span></span>
+          </a>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <NotificationBell />
+          <AuthStatus />
+        </div>
       </div>
       <TopTabs />
     </header>
