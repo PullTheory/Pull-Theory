@@ -9,6 +9,7 @@ const primaryTabs = [
   { label: "Home", href: "/", match: "/" },
   { label: "Shop Shopify", href: "/shopify", match: "/shopify" },
   { label: "eBay Deals", href: "/sealed-products", match: "/sealed-products" },
+  { label: "Daily Deal Checks", href: "/deals", match: "/deals" },
   { label: "Pokémon Search", href: "/search", match: "/search" },
   { label: "Collector Guides", href: "/guides", match: "/guides" },
 ];
