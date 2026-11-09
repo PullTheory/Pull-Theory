@@ -41,7 +41,7 @@ export default function TopTabs() {
   }, []);
 
   const adminTabs = canUsePullShield ? [
-    { label: "Traffic & Analytics", href: "/pullshield#traffic", match: "/pullshield" },
+    { label: "Traffic & Analytics", href: "/owner/traffic", match: "/owner/traffic" },
     { label: "Referral Admin", href: "/admin/referrals", match: "/admin/referrals" },
     { label: "PullShield Desk", href: "/pullshield", match: "/pullshield" },
     { label: "PullShield Verify", href: "/pullshield/authentication", match: "/pullshield/authentication" },
