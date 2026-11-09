@@ -62,10 +62,10 @@ export async function POST(request: Request) {
       "Collection details:",
       details,
       "",
-      photos.length ? `Photo links:\\n${photos.join("\\n")}` : "No photo links provided.",
+      photos.length ? `Photo links:\n${photos.join("\n")}` : "No photo links provided.",
       "",
       "Do not promise a price or accept custody of cards until the owner has received and agreed to written terms.",
-    ].join("\\n");
+    ].join("\n");
 
     const sent = await sendNotification(recipient, subject, message);
     if (!sent) {
