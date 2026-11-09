@@ -482,6 +482,7 @@ export default function SearchPage() {
                       </div>
                     );
                   })()}
+                  <p className="mt-2 text-center text-xs text-zinc-500">Marketplace links show current search results. Pull Theory Trade may earn a commission from qualifying eBay purchases.</p>
                   {card.image_url && (
                     <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-black/30">
                       <img src={card.image_url} alt={card.name} className="h-72 w-full object-contain p-3" />
