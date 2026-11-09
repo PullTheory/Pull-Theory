@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: base, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/shopify`, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/sealed-products`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${base}/deals`, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/search`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/guides`, changeFrequency: "weekly", priority: 0.8 },
     ...guides.map((guide) => ({ url: `${base}/guides/${guide.slug}`, changeFrequency: "monthly" as const, priority: 0.7 }))
