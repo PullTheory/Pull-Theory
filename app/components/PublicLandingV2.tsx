@@ -11,7 +11,7 @@ const categories = [
   { name: "New Releases & Restocks", detail: "Keep an eye out for newly available sealed products.", mark: "↗", tag: "FRESH FINDS" },
 ];
 
-const storeUrlFor = (category: string) => `${storeUrl}&utm_source=pulltheorytrade&utm_medium=website&utm_campaign=sealed_storefront&utm_content=${encodeURIComponent(category.toLowerCase().replaceAll(" ", "_"))}`;
+const storeUrlFor = (_category: string) => storeUrl;
 
 export default function PublicLandingV2() {
   return (
