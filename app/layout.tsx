@@ -10,17 +10,17 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pulltheorytrade.com"),
-  title: "PullTheoryTrade | Discover. Collect. Trade.",
-  description: "Discover Pokémon cards, connect with collectors, and buy, sell, and trade with PullTheoryTrade.",
+  title: "PullTheoryTrade | Pokémon Sealed Product Deals",
+  description: "Find Pokémon sealed products including booster boxes, Elite Trainer Boxes, booster bundles, collection boxes, and more with PullTheoryTrade.",
   icons: { icon: [{ url: "/logo.png", type: "image/png" }], apple: [{ url: "/logo.png", type: "image/png" }] },
   openGraph: {
-    title: "PullTheoryTrade | Discover. Collect. Trade.",
-    description: "Discover Pokémon cards, connect with collectors, and buy, sell, and trade with PullTheoryTrade.",
+    title: "PullTheoryTrade | Pokémon Sealed Product Deals",
+    description: "Discover sealed Pokémon products and compare current retailer listings with PullTheoryTrade.",
     url: "/",
     siteName: "PullTheoryTrade",
     images: [{ url: "/logo.png", width: 1000, height: 1000, alt: "PullTheoryTrade" }],
   },
-  twitter: { card: "summary_large_image", title: "PullTheoryTrade | Discover. Collect. Trade.", description: "Discover Pokémon cards, connect with collectors, and buy, sell, and trade with PullTheoryTrade.", images: ["/logo.png"] },
+  twitter: { card: "summary_large_image", title: "PullTheoryTrade | Pokémon Sealed Product Deals", description: "Discover sealed Pokémon products and compare current retailer listings with PullTheoryTrade.", images: ["/logo.png"] },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
