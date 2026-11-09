@@ -23,13 +23,13 @@ export default function SellPage() {
   return (
     <main className="min-h-screen px-4 py-10 text-white sm:px-6 sm:py-16">
       <div className="mx-auto max-w-6xl">
-        <section className="overflow-hidden rounded-[2rem] border border-violet-400/25 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,.3),transparent_42%),rgba(255,255,255,.035)] px-6 py-10 sm:px-12 sm:py-14">
-          <p className="text-xs font-black uppercase tracking-[.22em] text-violet-300">The seller's starting point</p>
+        <section className="overflow-hidden rounded-[2rem] border border-sky-300/20 bg-[radial-gradient(circle_at_12%_0%,rgba(37,99,235,.28),transparent_42%),#101827] px-6 py-10 sm:px-12 sm:py-14">
+          <p className="text-xs font-black uppercase tracking-[.22em] text-sky-300">The seller's starting point</p>
           <h1 className="mt-4 max-w-3xl text-4xl font-black tracking-[-.05em] sm:text-6xl">Turn cards you’re ready to move into your next great pull.</h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">List Pokémon cards for sale or trade with a collector-focused marketplace. Start with a single card, learn what buyers are looking for, and grow at your own pace.</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/marketplace/new" className="rounded-xl bg-violet-600 px-6 py-4 text-center font-black shadow-lg shadow-violet-950/40 transition hover:bg-violet-500">List a Card</Link>
-            <Link href="/marketplace/browse" className="rounded-xl border border-white/15 bg-white/5 px-6 py-4 text-center font-bold transition hover:bg-white/10">Browse Marketplace</Link><Link href="/collection-selling" className="rounded-xl border border-amber-300/25 bg-amber-300/5 px-6 py-4 text-center font-bold text-amber-200 transition hover:bg-amber-300/10">Sell an Entire Collection</Link><Link href="/seller-calculator" className="rounded-xl border border-violet-300/30 px-6 py-4 text-center font-bold text-violet-200 transition hover:bg-violet-500/10">Calculate Seller Proceeds</Link>
+            <Link href="/marketplace/new" className="rounded-xl bg-sky-400 text-slate-950 px-6 py-4 text-center font-black shadow-lg shadow-violet-950/40 transition hover:bg-sky-300">List a Card</Link>
+            <Link href="/marketplace/browse" className="rounded-xl border border-white/15 bg-white/5 px-6 py-4 text-center font-bold transition hover:bg-white/10">Browse Marketplace</Link><Link href="/collection-selling" className="rounded-xl border border-amber-300/25 bg-amber-300/5 px-6 py-4 text-center font-bold text-amber-200 transition hover:bg-amber-300/10">Sell an Entire Collection</Link><Link href="/seller-calculator" className="rounded-xl border border-sky-300/30 px-6 py-4 text-center font-bold text-sky-200 transition hover:bg-sky-300/10">Calculate Seller Proceeds</Link>
           </div>
           <p className="mt-4 text-sm text-zinc-400">Free Collector membership available · No inventory purchase required</p>
         </section>
@@ -41,7 +41,7 @@ export default function SellPage() {
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step) => <article key={step.number} className="rounded-2xl border border-white/10 bg-white/[.035] p-5">
-              <p className="text-sm font-black tracking-[.2em] text-violet-300">{step.number}</p>
+              <p className="text-sm font-black tracking-[.2em] text-sky-300">{step.number}</p>
               <h3 className="mt-4 text-lg font-black">{step.title}</h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">{step.body}</p>
             </article>)}
@@ -61,8 +61,8 @@ export default function SellPage() {
               <li>• Keep shipment tracking and proof of packaging.</li>
             </ul>
           </div>
-          <div className="rounded-3xl border border-violet-300/20 bg-violet-500/[.07] p-6 sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[.2em] text-violet-300">Marketplace seller fees</p>
+          <div className="rounded-3xl border border-sky-300/20 bg-[#101827] p-6 sm:p-8">
+            <p className="text-xs font-black uppercase tracking-[.2em] text-sky-300">Marketplace seller fees</p>
             <h2 className="mt-3 text-2xl font-black">Know the fee before you list.</h2>
             <div className="mt-5 space-y-3">
               {fees.map((item) => <div key={item.plan} className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
@@ -71,15 +71,15 @@ export default function SellPage() {
               </div>)}
             </div>
             <p className="mt-4 text-xs leading-5 text-zinc-500">Fees shown are the marketplace seller fees currently displayed on PullTheory’s membership page. Review the checkout and current terms before accepting a sale.</p>
-            <Link href="/pricing" className="mt-5 inline-block font-bold text-violet-200 hover:text-white">Compare memberships →</Link>
+            <Link href="/pricing" className="mt-5 inline-block font-bold text-sky-200 hover:text-white">Compare memberships →</Link>
           </div>
         </section>
 
         <section className="mt-12 rounded-3xl border border-white/10 bg-black/30 p-7 text-center sm:p-10">
-          <p className="text-xs font-black uppercase tracking-[.2em] text-violet-300">Ready when you are</p>
+          <p className="text-xs font-black uppercase tracking-[.2em] text-sky-300">Ready when you are</p>
           <h2 className="mt-3 text-3xl font-black">Put your next card in front of collectors.</h2>
           <p className="mx-auto mt-3 max-w-xl text-zinc-400">Start with one listing. You stay in control of your cards, your asking price, and which offers you accept.</p>
-          <Link href="/marketplace/new" className="mt-6 inline-block rounded-xl bg-violet-600 px-7 py-4 font-black transition hover:bg-violet-500">Start a Listing</Link>
+          <Link href="/marketplace/new" className="mt-6 inline-block rounded-xl bg-sky-400 text-slate-950 px-7 py-4 font-black transition hover:bg-sky-300">Start a Listing</Link>
         </section>
       </div>
     </main>
