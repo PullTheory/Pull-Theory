@@ -7,31 +7,10 @@ import { getCurrentAccessToken } from "../lib/supabase";
 
 const primaryTabs = [
   { label: "Home", href: "/", match: "/" },
+  { label: "Shop Shopify", href: "/shopify", match: "/shopify" },
   { label: "eBay Deals", href: "/sealed-products", match: "/sealed-products" },
-  { label: "Marketplace", href: "/marketplace/browse", match: "/marketplace" },
-  { label: "Card Search", href: "/search", match: "/search" },
-];
-
-const moreGroups = [
-  { heading: "Shop & discover", items: [
-    { label: "Shop Shopify Store", href: "/shopify", match: "/shopify" },
-    { label: "Collector Guides", href: "/guides", match: "/guides" },
-  ] },
-  { heading: "Your collection", items: [
-    { label: "My Collection", href: "/portfolio", match: "/portfolio" },
-    { label: "Want List", href: "/wants", match: "/wants" },
-  ] },
-  { heading: "Community", items: [
-    { label: "Community & Events", href: "/events", match: "/events" },
-    { label: "Trading", href: "/offers", match: "/offers" },
-  ] },
-  { heading: "Selling & account", items: [
-    { label: "Sell Cards", href: "/sell", match: "/sell" },
-    { label: "Sell a Collection", href: "/collection-selling", match: "/collection-selling" },
-    { label: "Seller Center", href: "/seller", match: "/seller" },
-    { label: "Memberships", href: "/pricing", match: "/pricing" },
-    { label: "Trust Center", href: "/trust", match: "/trust" },
-  ] },
+  { label: "Pokémon Search", href: "/search", match: "/search" },
+  { label: "Collector Guides", href: "/guides", match: "/guides" },
 ];
 
 export default function TopTabs() {
@@ -67,8 +46,7 @@ export default function TopTabs() {
     { label: "PullShield Desk", href: "/pullshield", match: "/pullshield" },
     { label: "PullShield Verify", href: "/pullshield/authentication", match: "/pullshield/authentication" },
   ] : [];
-  const allMoreTabs = [...moreGroups.flatMap((group) => group.items), ...adminTabs];
-  const moreActive = allMoreTabs.some((tab) => pathname.startsWith(tab.match));
+  const moreActive = adminTabs.some((tab) => pathname.startsWith(tab.match));
 
   return (
     <nav aria-label="Main navigation" className="border-t border-white/[.05]">
@@ -77,28 +55,15 @@ export default function TopTabs() {
           const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.match);
           return <Link key={tab.href} href={tab.href} aria-current={active ? "page" : undefined} className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold transition sm:text-sm ${active ? "bg-sky-400 text-slate-950 shadow-sm shadow-sky-950/30" : "text-slate-300 hover:bg-white/[.07] hover:text-white"}`}>{tab.label}</Link>;
         })}
-        <div className="relative shrink-0">
+        {adminTabs.length > 0 && <div className="relative shrink-0">
           <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} aria-haspopup="true" className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold transition sm:text-sm ${moreActive || moreOpen ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/[.07] hover:text-white"}`}>
-            More <span aria-hidden="true" className="ml-1">{moreOpen ? "⌃" : "⌄"}</span>
+            Owner tools <span aria-hidden="true" className="ml-1">{moreOpen ? "⌃" : "⌄"}</span>
           </button>
-          {moreOpen && (
-            <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 max-h-[75vh] w-72 overflow-y-auto rounded-2xl border border-white/10 bg-[#111c2d] p-3 shadow-2xl shadow-black/50 sm:left-auto sm:right-0">
-              {moreGroups.map((group) => (
-                <div key={group.heading} className="pb-2">
-                  <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[.18em] text-amber-200/75">{group.heading}</p>
-                  {group.items.map((tab) => {
-                    const active = pathname.startsWith(tab.match);
-                    return <Link key={tab.href} href={tab.href} onClick={() => setMoreOpen(false)} className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${active ? "bg-sky-300/10 text-sky-200" : "text-slate-300 hover:bg-white/[.06] hover:text-white"}`}>{tab.label}</Link>;
-                  })}
-                </div>
-              ))}
-              {adminTabs.length > 0 && <div className="border-t border-white/10 pt-2">
-                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[.18em] text-emerald-200/75">Owner tools</p>
-                {adminTabs.map((tab) => <Link key={tab.href} href={tab.href} onClick={() => setMoreOpen(false)} className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${pathname.startsWith(tab.match) ? "bg-emerald-300/10 text-emerald-100" : "text-slate-300 hover:bg-white/[.06] hover:text-white"}`}>{tab.label}</Link>)}
-              </div>}
-            </div>
-          )}
-        </div>
+          {moreOpen && <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 w-72 rounded-2xl border border-white/10 bg-[#111c2d] p-3 shadow-2xl shadow-black/50 sm:left-auto sm:right-0">
+            <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[.18em] text-emerald-200/75">Private owner tools</p>
+            {adminTabs.map((tab) => <Link key={tab.href} href={tab.href} onClick={() => setMoreOpen(false)} className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${pathname.startsWith(tab.match) ? "bg-emerald-300/10 text-emerald-100" : "text-slate-300 hover:bg-white/[.06] hover:text-white"}`}>{tab.label}</Link>)}
+          </div>}
+        </div>}
       </div>
     </nav>
   );
