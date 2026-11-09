@@ -53,7 +53,7 @@ export default function PricingPage() {
               <p className="mt-6 text-4xl font-semibold">{plan.price}</p><p className="mt-2 text-sm text-zinc-400">{plan.cadence}</p>
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4"><p className="text-sm font-semibold text-white">{plan.credits}</p><p className="mt-3 text-xs leading-5 text-sky-200">{plan.extra}</p><p className="mt-3 text-xs font-semibold leading-5 text-emerald-200">{plan.sellerFee}</p></div>
               <ul className="mt-6 space-y-3 text-sm text-zinc-200">{plan.features.map((feature) => <li key={feature} className="flex gap-3"><span className="text-emerald-300">✓</span>{feature}</li>)}</ul>
-              {"plan" in plan ? <MembershipCheckoutButton plan={plan.plan as PaidPlan} featured={plan.featured}>{plan.action}</MembershipCheckoutButton> : <a href={plan.href} className="mt-8 block rounded-2xl bg-sky-400 px-4 text-slate-950 py-3 text-center text-sm font-semibold text-white transition hover:bg-sky-300">{plan.action}</a>}
+              {"plan" in plan ? <MembershipCheckoutButton plan={plan.plan as PaidPlan} featured={plan.featured}>{plan.action}</MembershipCheckoutButton> : <a href={plan.href} className="mt-8 block rounded-2xl bg-sky-400 px-4 py-3 text-center text-sm font-bold text-slate-950 transition hover:bg-sky-300">{plan.action}</a>}
             </article>
           ))}
         </div>
