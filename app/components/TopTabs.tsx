@@ -17,6 +17,8 @@ const moreTabs = [
   { label: "PullMatches", href: "/matches", match: "/matches" },
   { label: "Collector Showcase", href: "/collector-showcase", match: "/collector-showcase" },
   { label: "Guides", href: "/guides", match: "/guides" },
+  { label: "Sell Cards", href: "/sell", match: "/sell" },
+  { label: "Sell a Collection", href: "/collection-selling", match: "/collection-selling" },
   { label: "Seller Center", href: "/seller", match: "/seller" },
   { label: "Membership", href: "/pricing", match: "/pricing" },
   { label: "Ambassadors", href: "/ambassadors", match: "/ambassadors" },
