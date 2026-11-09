@@ -2,12 +2,12 @@ import Link from "next/link";
 
 const storeUrl = "https://ebay.com/inf/pulltheorytrade?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5339243799&toolid=80008&mkevt=1";
 const categories = [
-  ["Booster Boxes", "Sealed booster displays for collectors and players.", "Explore booster box listings"],
-  ["Elite Trainer Boxes", "ETBs with booster packs and set-themed accessories.", "Explore ETB listings"],
-  ["Booster Bundles", "A pack-focused sealed option in a compact box.", "Explore bundle listings"],
-  ["Collection Boxes", "Special boxes, promo cards, and collectible releases.", "Explore collection boxes"],
-  ["Tins & Premium Collections", "Tins, premium boxes, and special product formats.", "Explore special products"],
-  ["New Releases & Restocks", "Check current listings for fresh releases and returning stock.", "Check current listings"],
+  ["Booster Boxes", "Sealed booster displays for collectors and players.", "Explore booster box listings", "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+booster+box+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1"],
+  ["Elite Trainer Boxes", "ETBs with booster packs and set-themed accessories.", "Explore ETB listings", "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+elite+trainer+box+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1"],
+  ["Booster Bundles", "A pack-focused sealed option in a compact box.", "Explore bundle listings", "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+booster+bundle+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1"],
+  ["Collection Boxes", "Special boxes, promo cards, and collectible releases.", "Explore collection boxes", "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+collection+box+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1"],
+  ["Tins & Premium Collections", "Tins, premium boxes, and special product formats.", "Explore special products", "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+premium+collection+tin+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1"],
+  ["New Releases & Restocks", "Check current listings for fresh releases and returning stock.", "Check current listings", "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+new+release+restock+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1"],
 ] as const;
 
 export const metadata = {
@@ -26,12 +26,12 @@ export default function SealedProductsPage() {
           <a href={storeUrl} target="_blank" rel="noopener noreferrer sponsored" className="mt-7 inline-flex rounded-xl bg-sky-400 px-6 py-3.5 text-sm font-extrabold text-slate-950 hover:bg-sky-300">Browse current eBay listings ↗</a>
         </section>
         <section id="categories" className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map(([name, description, cta], index) => (
+          {categories.map(([name, description, cta, url], index) => (
             <article key={name} className="flex min-h-56 flex-col rounded-2xl border border-white/10 bg-[#101c2e] p-6">
               <span className="text-xs font-black tracking-[.2em] text-sky-300">0{index + 1} / SEALED</span>
               <h2 className="mt-4 text-xl font-extrabold">{name}</h2>
               <p className="mt-2 flex-1 text-sm leading-6 text-slate-400">{description}</p>
-              <a href={storeUrl} target="_blank" rel="noopener noreferrer sponsored" className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-sky-200 hover:text-white">{cta} <span aria-hidden="true">↗</span></a>
+              <a href={url} target="_blank" rel="noopener noreferrer sponsored" className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-sky-200 hover:text-white">{cta} <span aria-hidden="true">↗</span></a>
             </article>
           ))}
         </section>
