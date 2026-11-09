@@ -47,22 +47,22 @@ export async function POST(request: Request) {
     }
 
     const recipient = process.env.COLLECTION_INQUIRY_EMAIL || "PullTheory@gmail.com";
-    const subject = \`New collection-selling inquiry — \${name}\`;
+    const subject = `New collection-selling inquiry — ${name}`;
     const message = [
       "A new PullTheory collection-selling inquiry was submitted.",
       "",
-      \`Name: \${name}\`,
-      \`Email: \${email}\`,
-      \`Phone: \${phone || "Not provided"}\`,
-      \`Location: \${location || "Not provided"}\`,
-      \`Collection size: \${size}\`,
-      \`Estimated value: \${estimatedValue || "Not sure"}\`,
-      \`Preferred contact: \${preferredContact}\`,
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Phone: ${phone || "Not provided"}`,
+      `Location: ${location || "Not provided"}`,
+      `Collection size: ${size}`,
+      `Estimated value: ${estimatedValue || "Not sure"}`,
+      `Preferred contact: ${preferredContact}`,
       "",
       "Collection details:",
       details,
       "",
-      photos.length ? \`Photo links:\\n\${photos.join("\\n")}\` : "No photo links provided.",
+      photos.length ? `Photo links:\\n${photos.join("\\n")}` : "No photo links provided.",
       "",
       "Do not promise a price or accept custody of cards until the owner has received and agreed to written terms.",
     ].join("\\n");
@@ -75,14 +75,14 @@ export async function POST(request: Request) {
       await sendNotification(
         email,
         "We received your PullTheory collection inquiry",
-        \`Thanks for reaching out to PullTheory about your Pokémon collection.
+        `Thanks for reaching out to PullTheory about your Pokémon collection.
 
 We received your inquiry and will review the details. If it looks like a possible fit, we'll follow up using your preferred contact method.
 
 Please keep your cards with you. Do not mail or hand over any cards unless you have received and agreed to written terms.
 
 PullTheory
-https://pulltheorytrade.com\`
+https://pulltheorytrade.com`
       );
     } catch (confirmationError) {
       console.error("[collection-inquiry] confirmation email failed", confirmationError);
