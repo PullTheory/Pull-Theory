@@ -63,7 +63,23 @@ export async function POST(request: Request) {
 
     const sent = await sendNotification(recipient, subject, message);
     if (!sent) {
-      return NextResponse.json({ error: "The inquiry email service is not configured yet. Please use the contact link below instead." }, { status: 503 });
+      return NextResponse.json({ error: "The inquiry email service is not configured yet. Please email PullTheory@gmail.com directly instead." }, { status: 503 });
+    }
+    try {
+      await sendNotification(
+        email,
+        "We received your PullTheory collection inquiry",
+        `Thanks for reaching out to PullTheory about your Pokémon collection.
+
+We received your inquiry and will review the details. If it looks like a possible fit, we'll follow up using your preferred contact method.
+
+Please keep your cards with you. Do not mail or hand over any cards unless you have received and agreed to written terms.
+
+PullTheory
+https://pulltheorytrade.com`
+      );
+    } catch (confirmationError) {
+      console.error("[collection-inquiry] confirmation email failed", confirmationError);
     }
     return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
