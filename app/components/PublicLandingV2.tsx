@@ -34,6 +34,9 @@ export default function PublicLandingV2() {
                 <Link href="/sealed-products" className="pt-primary-btn inline-flex min-h-14 items-center justify-center rounded-xl px-7 py-4 text-sm font-black uppercase tracking-wide text-slate-950 transition hover:-translate-y-1">
                   Explore the hunt <span className="ml-3 text-lg" aria-hidden="true">↗</span>
                 </Link>
+                <Link href="/shopify" className="inline-flex min-h-14 items-center justify-center rounded-xl border border-violet-300/35 bg-violet-300/10 px-7 py-4 text-sm font-extrabold text-violet-100 transition hover:border-violet-200/60 hover:bg-violet-300/15">
+                  Shop direct <span className="ml-2" aria-hidden="true">↗</span>
+                </Link>
                 <a href={storeUrl} target="_blank" rel="noopener noreferrer sponsored" className="inline-flex min-h-14 items-center justify-center rounded-xl border border-white/15 bg-white/[.07] px-7 py-4 text-sm font-extrabold text-white transition hover:border-amber-200/50 hover:bg-white/10">
                   Shop eBay storefront <span className="ml-2" aria-hidden="true">↗</span>
                 </a>
