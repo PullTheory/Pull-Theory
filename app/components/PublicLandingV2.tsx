@@ -3,15 +3,15 @@ import Link from "next/link";
 const storeUrl = "https://ebay.com/inf/pulltheorytrade?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5339243799&toolid=80008&mkevt=1";
 
 const categories = [
-  { name: "Booster Boxes", detail: "The go-to sealed format for set builders and pack rippers.", mark: "▦", tag: "BOXES" },
-  { name: "Elite Trainer Boxes", detail: "A great all-in-one pick with packs and accessories.", mark: "✦", tag: "ETBs" },
-  { name: "Booster Bundles", detail: "Compact sealed options when you want packs without the extras.", mark: "▤", tag: "BUNDLES" },
-  { name: "Collection Boxes", detail: "Special releases, promo cards, and display-worthy boxes.", mark: "◇", tag: "COLLECTIONS" },
-  { name: "Tins & Special Sets", detail: "Explore tins, premium collections, and limited releases.", mark: "⬡", tag: "SPECIAL" },
-  { name: "New Releases & Restocks", detail: "Keep an eye out for newly available sealed products.", mark: "↗", tag: "FRESH FINDS" },
+  { name: "Booster Boxes", url: "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+booster+box+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1", detail: "The go-to sealed format for set builders and pack rippers.", mark: "▦", tag: "BOXES" },
+  { name: "Elite Trainer Boxes", url: "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+elite+trainer+box+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1", detail: "A great all-in-one pick with packs and accessories.", mark: "✦", tag: "ETBs" },
+  { name: "Booster Bundles", url: "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+booster+bundle+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1", detail: "Compact sealed options when you want packs without the extras.", mark: "▤", tag: "BUNDLES" },
+  { name: "Collection Boxes", url: "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+collection+box+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1", detail: "Special releases, promo cards, and display-worthy boxes.", mark: "◇", tag: "COLLECTIONS" },
+  { name: "Tins & Special Sets", url: "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+premium+collection+tin+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1", detail: "Explore tins, premium collections, and limited releases.", mark: "⬡", tag: "SPECIAL" },
+  { name: "New Releases & Restocks", url: "https://www.ebay.com/sch/i.html?_nkw=pokemon+tcg+new+release+restock+sealed&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1", detail: "Keep an eye out for newly available sealed products.", mark: "↗", tag: "FRESH FINDS" },
 ];
 
-const storeUrlFor = (_category: string) => storeUrl;
+const storeUrlFor = (category: string) => categories.find((item) => item.name === category)?.url ?? storeUrl;
 
 export default function PublicLandingV2() {
   return (
