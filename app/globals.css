@@ -77,3 +77,135 @@ body {
 .pt-info-card {border:1px solid rgba(255,255,255,.09);border-radius:18px;background:linear-gradient(145deg,rgba(22,29,49,.95),rgba(12,18,32,.95));padding:24px;}
 @keyframes ptFloat {0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(9deg)}}
 @media(max-width:640px){.pt-hero-art{max-width:390px;height:300px}.pt-card{left:20%;width:40%;height:72%}.pt-booster{right:9%;width:32%;height:84%}.pt-art-caption{font-size:6px}.pt-art-stamp{left:0;bottom:8%;padding:7px 9px}.pt-art-stamp b{font-size:15px}}
+
+
+/* PullTheoryTrade full-site collector design system */
+:root {
+  --pt-ink: #070914;
+  --pt-panel: #10172a;
+  --pt-panel-2: #151d34;
+  --pt-line: rgba(180, 190, 255, .15);
+  --pt-gold: #f6c95b;
+  --pt-violet: #9b8cff;
+  --pt-cyan: #68dff2;
+}
+body {
+  background:
+    radial-gradient(ellipse at 8% 12%, rgba(91, 65, 181, .18), transparent 34rem),
+    radial-gradient(ellipse at 92% 28%, rgba(24, 151, 181, .11), transparent 32rem),
+    linear-gradient(180deg, #080b18 0%, #080d19 48%, #0b1020 100%) !important;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .16;
+  background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: linear-gradient(180deg, black, transparent 82%);
+}
+header.sticky {
+  background: rgba(7, 10, 23, .94) !important;
+  border-color: rgba(246, 201, 91, .18) !important;
+  box-shadow: 0 12px 42px rgba(0,0,0,.38), 0 1px 0 rgba(155,140,255,.08) !important;
+}
+header nav {
+  background: linear-gradient(90deg, rgba(14,19,39,.94), rgba(10,19,34,.94));
+}
+header nav a, header nav button {
+  border: 1px solid transparent;
+  letter-spacing: .015em;
+}
+header nav a[aria-current="page"] {
+  color: #101426 !important;
+  background: linear-gradient(110deg, #ffe6a0, #f4c14f 58%, #d99a35) !important;
+  border-color: rgba(255,255,255,.28);
+  box-shadow: 0 5px 20px rgba(226,174,65,.2);
+}
+main {
+  position: relative;
+  isolation: isolate;
+  background: transparent !important;
+}
+main > div {
+  position: relative;
+}
+main h1 {
+  letter-spacing: -.045em;
+  text-wrap: balance;
+  text-shadow: 0 5px 32px rgba(120, 104, 235, .12);
+}
+main h2, main h3 {
+  letter-spacing: -.025em;
+}
+main section {
+  scroll-margin-top: 9rem;
+}
+main article, main section > div[class*="rounded"], main form,
+main div[class*="rounded-2xl"][class*="border"],
+main div[class*="rounded-3xl"][class*="border"],
+main div[class*="rounded-[2rem]"][class*="border"] {
+  border-color: var(--pt-line);
+}
+main article, main section > div[class*="rounded-[2rem]"],
+main section > div[class*="rounded-3xl"] {
+  box-shadow: 0 22px 65px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025);
+}
+main input:not([type="checkbox"]):not([type="radio"]),
+main select, main textarea {
+  color: #f8fafc;
+  border-color: rgba(155,140,255,.24) !important;
+  background: rgba(5,9,22,.72) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+main input:focus, main select:focus, main textarea:focus {
+  border-color: rgba(104,223,242,.72) !important;
+  box-shadow: 0 0 0 3px rgba(104,223,242,.1) !important;
+}
+main button:not([aria-haspopup="true"]) {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease;
+}
+main button:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+main button:disabled {
+  cursor: not-allowed;
+}
+main a:not([class*="bg-"]) {
+  text-decoration-color: rgba(104,223,242,.35);
+  text-underline-offset: 3px;
+}
+main a:not([class*="bg-"]):hover {
+  color: #a5f3fc;
+}
+main img {
+  max-width: 100%;
+}
+main table {
+  border-color: var(--pt-line);
+}
+main th {
+  color: #f6d98f;
+}
+main hr {
+  border-color: var(--pt-line);
+}
+main [class*="text-zinc-400"], main [class*="text-slate-400"] {
+  color: #a6b0c6;
+}
+main [class*="text-amber-300"] {
+  color: #f6d98f;
+}
+main [class*="border-white/10"], main [class*="border-white/\[.1\]"] {
+  border-color: var(--pt-line) !important;
+}
+@media (max-width: 640px) {
+  main { padding-top: 1.5rem; }
+  main h1 { font-size: clamp(2rem, 9vw, 3rem); line-height: 1.04; }
+  main section { border-radius: 1.35rem; }
+  header nav > div { gap: .35rem; }
+  header nav a, header nav button { padding: .55rem .75rem; font-size: .72rem; }
+}

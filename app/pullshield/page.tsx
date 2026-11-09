@@ -218,7 +218,7 @@ export default function PullShieldDeskPage() {
             {message}
           </p>
         )}
-        <section className="mt-8 rounded-3xl border border-emerald-300/20 bg-emerald-400/[0.06] p-6">
+        <section id="traffic" aria-label="Website traffic and analytics" className="mt-8 scroll-mt-32 rounded-3xl border border-emerald-300/20 bg-emerald-400/[0.06] p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
             Website traffic
           </p>

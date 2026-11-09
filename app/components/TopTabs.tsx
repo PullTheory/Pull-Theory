@@ -7,21 +7,31 @@ import { getCurrentAccessToken } from "../lib/supabase";
 
 const primaryTabs = [
   { label: "Home", href: "/", match: "/" },
-  { label: "Sealed Products", href: "/sealed-products", match: "/sealed-products" },
-  { label: "Deals & Restocks", href: "/sealed-products#categories", match: "/deals" },
+  { label: "eBay Deals", href: "/sealed-products", match: "/sealed-products" },
+  { label: "Marketplace", href: "/marketplace/browse", match: "/marketplace" },
+  { label: "Card Search", href: "/search", match: "/search" },
 ];
 
-const moreTabs = [
-  { label: "Collector Guides", href: "/guides", match: "/guides" },
-  { label: "My Collection", href: "/portfolio", match: "/portfolio" },
-  { label: "Want List", href: "/wants", match: "/wants" },
-  { label: "Community & Events", href: "/events", match: "/events" },
-  { label: "Trading (community)", href: "/offers", match: "/offers" },
-  { label: "Sell Cards (community)", href: "/sell", match: "/sell" },
-  { label: "Sell a Collection", href: "/collection-selling", match: "/collection-selling" },
-  { label: "Seller Center", href: "/seller", match: "/seller" },
-  { label: "Memberships", href: "/pricing", match: "/pricing" },
-  { label: "Trust Center", href: "/trust", match: "/trust" },
+const moreGroups = [
+  { heading: "Shop & discover", items: [
+    { label: "Shop Shopify Store", href: "/shopify", match: "/shopify" },
+    { label: "Collector Guides", href: "/guides", match: "/guides" },
+  ] },
+  { heading: "Your collection", items: [
+    { label: "My Collection", href: "/portfolio", match: "/portfolio" },
+    { label: "Want List", href: "/wants", match: "/wants" },
+  ] },
+  { heading: "Community", items: [
+    { label: "Community & Events", href: "/events", match: "/events" },
+    { label: "Trading", href: "/offers", match: "/offers" },
+  ] },
+  { heading: "Selling & account", items: [
+    { label: "Sell Cards", href: "/sell", match: "/sell" },
+    { label: "Sell a Collection", href: "/collection-selling", match: "/collection-selling" },
+    { label: "Seller Center", href: "/seller", match: "/seller" },
+    { label: "Memberships", href: "/pricing", match: "/pricing" },
+    { label: "Trust Center", href: "/trust", match: "/trust" },
+  ] },
 ];
 
 export default function TopTabs() {
@@ -52,11 +62,12 @@ export default function TopTabs() {
   }, []);
 
   const adminTabs = canUsePullShield ? [
+    { label: "Traffic & Analytics", href: "/pullshield#traffic", match: "/pullshield" },
     { label: "Referral Admin", href: "/admin/referrals", match: "/admin/referrals" },
     { label: "PullShield Desk", href: "/pullshield", match: "/pullshield" },
     { label: "PullShield Verify", href: "/pullshield/authentication", match: "/pullshield/authentication" },
   ] : [];
-  const allMoreTabs = [...moreTabs, ...adminTabs];
+  const allMoreTabs = [...moreGroups.flatMap((group) => group.items), ...adminTabs];
   const moreActive = allMoreTabs.some((tab) => pathname.startsWith(tab.match));
 
   return (
@@ -71,11 +82,20 @@ export default function TopTabs() {
             More <span aria-hidden="true" className="ml-1">{moreOpen ? "⌃" : "⌄"}</span>
           </button>
           {moreOpen && (
-            <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 grid w-64 gap-1 rounded-2xl border border-white/10 bg-[#111c2d] p-2 shadow-2xl shadow-black/50 sm:left-auto sm:right-0">
-              {allMoreTabs.map((tab) => {
-                const active = pathname.startsWith(tab.match);
-                return <Link key={tab.href} href={tab.href} onClick={() => setMoreOpen(false)} className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${active ? "bg-sky-300/10 text-sky-200" : "text-slate-300 hover:bg-white/[.06] hover:text-white"}`}>{tab.label}</Link>;
-              })}
+            <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 max-h-[75vh] w-72 overflow-y-auto rounded-2xl border border-white/10 bg-[#111c2d] p-3 shadow-2xl shadow-black/50 sm:left-auto sm:right-0">
+              {moreGroups.map((group) => (
+                <div key={group.heading} className="pb-2">
+                  <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[.18em] text-amber-200/75">{group.heading}</p>
+                  {group.items.map((tab) => {
+                    const active = pathname.startsWith(tab.match);
+                    return <Link key={tab.href} href={tab.href} onClick={() => setMoreOpen(false)} className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${active ? "bg-sky-300/10 text-sky-200" : "text-slate-300 hover:bg-white/[.06] hover:text-white"}`}>{tab.label}</Link>;
+                  })}
+                </div>
+              ))}
+              {adminTabs.length > 0 && <div className="border-t border-white/10 pt-2">
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[.18em] text-emerald-200/75">Owner tools</p>
+                {adminTabs.map((tab) => <Link key={tab.href} href={tab.href} onClick={() => setMoreOpen(false)} className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${pathname.startsWith(tab.match) ? "bg-emerald-300/10 text-emerald-100" : "text-slate-300 hover:bg-white/[.06] hover:text-white"}`}>{tab.label}</Link>)}
+              </div>}
             </div>
           )}
         </div>
