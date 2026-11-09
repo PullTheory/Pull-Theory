@@ -63,7 +63,7 @@ export default function CollectionSellingPage() {
         <button type="submit" disabled={busy} className="mt-7 w-full rounded-xl bg-violet-600 px-6 py-4 font-black transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60">{busy ? "Sending inquiry…" : "Submit collection inquiry"}</button>
         <p className="mt-4 text-center text-xs text-zinc-500">Please do not mail cards or share payment details. Never send your collection before receiving and accepting written terms.</p>
       </form>
-      <p className="mt-6 text-center text-sm text-zinc-500">Questions? <Link href="/contact" className="font-bold text-violet-300">Contact PullTheory</Link></p>
+      <p className="mt-6 text-center text-sm text-zinc-500">Questions? <a href="mailto:PullTheory@gmail.com" className="font-bold text-violet-300">Email PullTheory</a></p>
     </div>
   </main>;
 }
