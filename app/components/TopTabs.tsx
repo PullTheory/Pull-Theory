@@ -7,11 +7,9 @@ import { getCurrentAccessToken } from "../lib/supabase";
 
 const primaryTabs = [
   { label: "Home", href: "/", match: "/" },
-  { label: "Shop Sealed", href: "/sealed-products", match: "/sealed-products" },
+  { label: "eBay Deals", href: "/sealed-products", match: "/sealed-products" },
   { label: "Marketplace", href: "/marketplace/browse", match: "/marketplace" },
   { label: "Card Search", href: "/search", match: "/search" },
-  { label: "Community", href: "/events", match: "/events" },
-  { label: "Membership", href: "/pricing", match: "/pricing" },
 ];
 
 const moreGroups = [
