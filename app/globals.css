@@ -209,3 +209,47 @@ main [class*="border-white/10"], main [class*="border-white/\[.1\]"] {
   header nav > div { gap: .35rem; }
   header nav a, header nav button { padding: .55rem .75rem; font-size: .72rem; }
 }
+
+
+/* Unified collector storefront polish across every route */
+:root {
+  color-scheme: dark;
+  --pt-gold-soft: #ffe3a0;
+  --pt-border: rgba(189, 199, 232, .16);
+}
+body { min-width: 320px; }
+a, button { -webkit-tap-highlight-color: transparent; }
+.pt-navigation { background: rgba(7, 10, 23, .9); }
+.pt-navigation-inner { scrollbar-width: thin; scrollbar-color: rgba(246,201,91,.32) transparent; }
+.pt-nav-link { flex: 0 0 auto; border: 1px solid transparent; text-decoration: none !important; }
+.pt-nav-active { color: #171321 !important; background: linear-gradient(110deg,#ffe6a0,#f4c14f 58%,#d99a35) !important; border-color: rgba(255,255,255,.28); box-shadow: 0 5px 20px rgba(226,174,65,.2); }
+.pt-nav-menu { background: linear-gradient(145deg,#151c31,#0c1425); border-color: rgba(246,201,91,.2) !important; max-height: min(72vh, 620px); overflow-y: auto; }
+main { width: 100%; }
+main > div, main > section { max-width: 100%; }
+main section + section { scroll-margin-top: 9rem; }
+main article { backdrop-filter: blur(8px); }
+main button, main a[class*="rounded"] { text-decoration: none; }
+main button:not(:disabled), main a[class*="rounded"] { touch-action: manipulation; }
+main :is(input,select,textarea) { min-height: 2.75rem; }
+main textarea { min-height: 7rem; }
+main :is(button,a)[class*="bg-sky-400"], main :is(button,a)[class*="bg-blue-"] {
+  box-shadow: 0 9px 25px rgba(56,189,248,.13);
+}
+main :is(button,a)[class*="bg-amber-"] { box-shadow: 0 9px 25px rgba(245,158,11,.13); }
+main :is(button,a)[class*="bg-violet-"] { box-shadow: 0 9px 25px rgba(139,92,246,.13); }
+main :is(table) { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 14px; }
+main th, main td { padding: .8rem .9rem; border-bottom: 1px solid var(--pt-border); text-align: left; }
+main th { background: rgba(246,201,91,.07); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+main tr:last-child td { border-bottom: 0; }
+main :is(pre, code) { overflow-wrap: anywhere; }
+main :is(.overflow-x-auto) { scrollbar-width: thin; scrollbar-color: rgba(246,201,91,.3) transparent; }
+@media (max-width: 640px) {
+  .pt-navigation-inner { padding-left: .75rem; padding-right: .75rem; }
+  .pt-nav-link { font-size: .7rem; padding: .58rem .72rem; }
+  .pt-nav-menu { position: fixed; top: auto; right: .75rem; width: min(19rem, calc(100vw - 1.5rem)); }
+  main { padding-left: 1rem; padding-right: 1rem; }
+  main > div { min-width: 0; }
+  main :is(input,select,textarea) { max-width: 100%; }
+  main :is(table) { display: block; overflow-x: auto; white-space: nowrap; }
+  main :is(button,a[class*="rounded"]) { max-width: 100%; }
+}
