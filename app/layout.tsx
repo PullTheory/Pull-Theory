@@ -10,12 +10,12 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pulltheorytrade.com"),
-  title: "PullTheoryTrade | Pokémon Sealed Product Deals",
-  description: "Find Pokémon sealed products including booster boxes, Elite Trainer Boxes, booster bundles, collection boxes, and more with PullTheoryTrade.",
+  title: "PullTheoryTrade | Shop, Collect, Buy, Sell & Trade",
+  description: "Shop sealed Pokémon products, discover singles and graded cards, explore the collector marketplace, and manage your collection with PullTheoryTrade.",
   icons: { icon: [{ url: "/logo.png", type: "image/png" }], apple: [{ url: "/logo.png", type: "image/png" }] },
   openGraph: {
-    title: "PullTheoryTrade | Pokémon Sealed Product Deals",
-    description: "Discover sealed Pokémon products and compare current retailer listings with PullTheoryTrade.",
+    title: "PullTheoryTrade | Shop, Collect, Buy, Sell & Trade",
+    description: "Discover sealed products, singles, graded cards, and collector tools at PullTheoryTrade.",
     url: "/",
     siteName: "PullTheoryTrade",
     images: [{ url: "/logo.png", width: 1000, height: 1000, alt: "PullTheoryTrade" }],
