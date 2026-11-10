@@ -381,3 +381,18 @@ body { background:#f4f1eb; color:#171923; font-family:var(--font-geist-sans),Ari
 @keyframes pt-skeleton { to { background-position:-200% 0; } }
 @media(max-width:900px){.pt-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-catalog-controls{grid-template-columns:1fr 1fr}.pt-catalog-search{grid-column:1/-1}}
 @media(max-width:560px){.pt-catalog{padding:25px 20px 50px}.pt-catalog-heading{align-items:start;flex-direction:column}.pt-catalog-controls{grid-template-columns:1fr}.pt-catalog-search{grid-column:auto}.pt-product-grid{gap:9px}.pt-product-info{padding:11px}.pt-product-info h3{font-size:11px;min-height:50px}.pt-product-bottom strong{font-size:14px}.pt-product-bottom span{font-size:8px}}
+
+
+.pt-store-page { min-height:100vh; background:#f4f1eb; color:#20222b; }
+.pt-shop-banner { position:relative; max-width:1440px; margin:0 auto; padding:70px 7%; overflow:hidden; background:#e8e3d9; }
+.pt-shop-banner:after { content:""; position:absolute; right:10%; top:-180px; width:520px; height:520px; border:1px solid #c9bfb1; border-radius:50%; box-shadow:0 0 0 38px #ffffff18,0 0 0 78px #ffffff18; }
+.pt-shop-banner h1 { position:relative; z-index:1; margin:15px 0 0; font-size:clamp(44px,6vw,76px); font-weight:950; line-height:.92; letter-spacing:-.075em; color:#20222b; }
+.pt-shop-banner h1 em { color:#c96c42; font-family:Georgia,serif; font-weight:500; }
+.pt-shop-banner>p:not(.pt-store-eyebrow) { position:relative; z-index:1; max-width:530px; margin:19px 0 0; color:#6d6962; font-size:14px; line-height:1.8; }
+.pt-shop-banner-links { position:relative; z-index:1; display:flex; flex-wrap:wrap; gap:20px; margin-top:25px; }
+.pt-shop-banner-links a { color:#a65b39; font-size:11px; font-weight:950; text-decoration:none; }
+.pt-shop-banner-mark { position:absolute; right:13%; bottom:-43px; color:#c96c4214; font-size:250px; font-weight:950; letter-spacing:-.12em; }
+.pt-sealed-banner { background:#e4e8e3; }
+.pt-sealed-banner:after { border-color:#bfcfc5; }
+.pt-sealed-banner h1 em { color:#547b68; }
+.pt-sealed-banner .pt-shop-banner-links a { color:#547b68; }
