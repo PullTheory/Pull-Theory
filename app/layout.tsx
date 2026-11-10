@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import AppHeader from "./components/AppHeader";
 import TrafficTracker from "./components/TrafficTracker";
+import SiteFooter from "./components/SiteFooter";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <TrafficTracker />
           <AppHeader />
           {children}
+          <SiteFooter />
           <Analytics />
         </div>
       </body>
