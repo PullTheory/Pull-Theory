@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ShopCatalog from "./ShopCatalog";
 
 const affiliate = "https://ebay.com/inf/pulltheorytrade?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5339243799&toolid=80008&mkevt=1";
 const ebaySearch = (term: string) => `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(term)}&mkcid=1&mkrid=711-53200-19255-0&toolid=20023&campid=5339243819&customid=PullTheoryTrade&siteid=0&mkevt=1`;
@@ -67,10 +68,11 @@ export default function PublicLandingV2() {
           </div>
         </section>
 
-        <section className="mt-14 sm:mt-16" aria-labelledby="shop-heading">
-          <div className="mb-6"><p className="text-[10px] font-black uppercase tracking-[.28em] text-cyan-200">The sealed shelf</p><h2 id="shop-heading" className="mt-3 text-3xl font-black tracking-[-.045em] sm:text-4xl">Shop the <span className="text-cyan-200">rip.</span></h2><p className="mt-2 text-sm leading-6 text-slate-400">Browse marketplace listings by product type. Retailer listings, prices, availability, and shipping can change.</p></div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shopTiles.map((item) => <a key={item.title} href={item.href} target="_blank" rel="noopener noreferrer sponsored" className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-[#10172a]/90 p-5 transition hover:-translate-y-0.5 hover:border-cyan-200/35 hover:bg-[#151d34]"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-200/[.07] text-xl font-black text-cyan-100">{item.mark}</span><span className="min-w-0 flex-1"><span className="block font-black text-white">{item.title}</span><span className="mt-1 block text-xs leading-5 text-slate-400">{item.note}</span></span><span className="text-lg text-cyan-200 transition group-hover:translate-x-1">↗</span></a>)}</div>
-          <p className="mt-3 text-[10px] leading-5 text-slate-500">Some links are affiliate links. PullTheoryTrade may earn a commission from qualifying purchases at no additional cost to you. Marketplace checkout and fulfillment are handled by the retailer.</p>
+        <ShopCatalog compact heading="Available now in the store" />
+
+        <section className="mt-8 rounded-2xl border border-cyan-200/15 bg-[#101827] p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div><p className="text-[10px] font-black uppercase tracking-[.24em] text-cyan-200">Marketplace finds</p><h2 className="mt-2 text-xl font-black">Looking for a specific card or graded slab?</h2><p className="mt-2 text-sm text-slate-400">Explore third-party eBay listings when you want more selection beyond the direct store.</p></div>
+          <a href={affiliate} target="_blank" rel="noopener noreferrer sponsored" className="mt-4 inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl border border-cyan-200/30 bg-cyan-200/10 px-5 py-3 text-sm font-black text-cyan-100 hover:bg-cyan-200/15 sm:mt-0">Browse eBay marketplace ↗</a>
         </section>
 
         <section className="pt-deal-panel relative mt-14 overflow-hidden rounded-[2rem] border border-amber-200/20 p-7 sm:mt-16 sm:p-10">
