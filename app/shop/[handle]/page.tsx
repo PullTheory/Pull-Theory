@@ -72,9 +72,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .filter((image) => image.src);
 
   return (
-    <main className="min-h-screen px-4 py-8 text-white sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-[#f4f1eb] px-4 py-8 text-[#20222b] sm:px-6 sm:py-12">
       <div className="mx-auto max-w-6xl">
-        <Link href="/shopify" className="text-sm font-bold text-amber-200 hover:text-white">
+        <Link href="/shopify" className="text-sm font-bold text-[#a65b39] hover:text-[#20222b]">
           ← Back to shop
         </Link>
         <div className="mt-6 grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
@@ -82,7 +82,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {images.slice(0, 4).map((image, index) => (
               <div
                 key={image.key}
-                className={`relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-[#101827] ${index === 0 ? "col-span-2" : ""}`}
+                className={`relative aspect-square overflow-hidden rounded-2xl border border-[#e4ded4] bg-white ${index === 0 ? "col-span-2" : ""}`}
               >
                 <Image
                   src={image.src}
@@ -96,13 +96,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             ))}
           </div>
           <div className="h-fit rounded-3xl border border-white/10 bg-[#101827] p-6 sm:p-8 lg:sticky lg:top-6">
-            <p className="text-xs font-black uppercase tracking-[.2em] text-amber-200">
+            <p className="text-xs font-black uppercase tracking-[.2em] text-[#a65b39]">
               {product.product_type || "Trading cards"} · {product.vendor || "PullTheoryTrade"}
             </p>
             <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight sm:text-4xl">
               {product.title}
             </h1>
-            <p className="mt-5 text-3xl font-black text-amber-100">
+            <p className="mt-5 text-3xl font-black text-[#20222b]">
               {variant
                 ? Number(variant.price).toLocaleString("en-US", { style: "currency", currency: "USD" })
                 : "See store price"}
@@ -113,7 +113,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {variant && (
               <a
                 href={`${SHOP}/cart/${variant.id}:1`}
-                className={`mt-7 flex min-h-13 w-full items-center justify-center rounded-xl px-6 py-4 text-sm font-black uppercase tracking-wide transition ${available.length ? "bg-amber-200 text-slate-950 hover:bg-amber-100" : "pointer-events-none bg-white/10 text-slate-500"}`}
+                className={`mt-7 flex min-h-13 w-full items-center justify-center rounded-xl px-6 py-4 text-sm font-black uppercase tracking-wide transition ${available.length ? "bg-[#20232d] text-white hover:bg-[#c96c42]" : "pointer-events-none bg-[#eeeae3] text-slate-500"}`}
               >
                 Add to cart · Shopify checkout ↗
               </a>
@@ -122,9 +122,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               Your cart and payment are handled securely by the PullTheoryTrade Shopify store. Final
               availability and shipping are confirmed at checkout.
             </p>
-            <div className="mt-8 border-t border-white/10 pt-6">
+            <div className="mt-8 border-t border-[#eeeae3] pt-6">
               <h2 className="text-lg font-black">Product details</h2>
-              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-300">
+              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">
                 {description || "See the product details at checkout."}
               </p>
               {variant?.sku && <p className="mt-4 text-xs text-slate-500">SKU: {variant.sku}</p>}
